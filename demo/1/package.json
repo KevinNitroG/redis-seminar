@@ -1,0 +1,10 @@
+{
+  "name": "demo-1",
+  "main": "src/index.js",
+  "scripts": {
+    "run": "node src/index.js"
+  },
+  "dependencies": {
+    "redis": "catalog:"
+  }
+}

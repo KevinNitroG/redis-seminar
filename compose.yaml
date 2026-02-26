@@ -1,0 +1,22 @@
+services:
+  redis:
+    container_name: redis_seminar-redis
+    image: redis:8.6.0-alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+
+  redisinsight:
+    container_name: redis_seminar-redisinsight
+    image: redis/redisinsight:3.0.3
+    ports:
+      - 5540:5540
+    volumes:
+      - redisinsight_data:/db
+    depends_on:
+      - redis
+
+volumes:
+  redis_data:
+  redisinsight_data:

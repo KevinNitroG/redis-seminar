@@ -1,0 +1,7 @@
+{
+  "name": "redis-seminar",
+  "packageManager": "pnpm@10.28.2",
+  "devDependencies": {
+    "prettier": "^3.8.1"
+  }
+}
