@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "slidev": [
+      "{projectRoot}/slides.md",
+      "{projectRoot}/index.html",
+      "{projectRoot}/components/**/*",
+      "{projectRoot}/layouts/**/*",
+      "{projectRoot}/public/**/*",
+      "{projectRoot}/setup/**/*",
+      "{projectRoot}/snippets/**/*",
+      "{projectRoot}/styles/**/*",
+      "{projectRoot}/vite.config.ts"
+    ]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "cache": true
+    }
+  }
+}

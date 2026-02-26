@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  main:
+    name: Main
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          cache: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .tool-versions
+          cache: true
+
+      - name: Derive SHAs for Nx Affected
+        id: set-shas
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Install Node Dependencies
+        run: pnpm install
+
+      - name: Setup Git User
+        run: |
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions [Bot]"
+
+      - name: Run Nx
+        run: |
+          pnpm nx affected \
+            --target=build \
+            --target=export \
+            --target=deploy \
+            --parallel \
+            --max-parallel=5

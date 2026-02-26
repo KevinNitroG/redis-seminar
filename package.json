@@ -1,7 +1,10 @@
 {
   "name": "redis-seminar",
-  "packageManager": "pnpm@10.28.2",
   "devDependencies": {
-    "prettier": "^3.8.1"
-  }
+    "nx": "22.5.2",
+    "nx-github-pages": "^1.2.0",
+    "prettier": "catalog:",
+    "prettier-plugin-slidev": "catalog:"
+  },
+  "packageManager": "pnpm@10.28.2"
 }

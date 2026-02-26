@@ -1,0 +1,34 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "inputs": ["slidev"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm run build",
+        "cwd": "{projectRoot}"
+      },
+      "configurations": {
+        "ci": {
+          "args": [
+            "--base=/redis-seminar/slide-se332/",
+            "--out=../../dist/page/slide-se332/"
+          ]
+        }
+      }
+    },
+    "export": {
+      "inputs": ["slidev"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm run export",
+        "cwd": "{projectRoot}"
+      },
+      "configurations": {
+        "ci": {
+          "args": ["--format=pdf", "--output=../../dist/release/slide-se332"]
+        }
+      }
+    }
+  }
+}

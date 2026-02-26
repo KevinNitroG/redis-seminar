@@ -1,6 +1,21 @@
 packages:
   - packages/*
   - demo/*
+  - slides/*
 
 catalog:
+  prettier: 3.8.1
+  prettier-plugin-slidev: 1.0.5
   redis: 5.11.0
+
+catalogs:
+  slidev:
+    '@slidev/cli': 52.12.0
+    playwright-chromium: 1.58.2
+    slidev-theme-academic: 2.1.0
+    vue: 3.5.27
+
+onlyBuiltDependencies:
+  - esbuild
+  - nx
+  - playwright-chromium

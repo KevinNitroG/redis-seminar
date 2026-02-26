@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "deploy": {
+      "executor": "nx-github-pages:deploy",
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": ["slide-se109", "slide-se332"]
+        }
+      ],
+      "options": {
+        "directory": "./dist/page/"
+      },
+      "cache": true
+    }
+  }
+}
