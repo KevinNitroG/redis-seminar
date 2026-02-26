@@ -3,6 +3,10 @@
   "targets": {
     "build": {
       "inputs": ["slidev"],
+      "outputs": [
+        "{projectRoot}/dist/",
+        "{workspaceRoot}/dist/page/slide-se332"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm run build",
@@ -19,6 +23,10 @@
     },
     "export": {
       "inputs": ["slidev"],
+      "outputs": [
+        "{projectRoot}/dist/",
+        "{workspaceRoot}/dist/release/slide-se332.{pdf}"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm run export",

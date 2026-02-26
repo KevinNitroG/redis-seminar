@@ -3,6 +3,7 @@
   "targets": {
     "deploy": {
       "executor": "nx-github-pages:deploy",
+      "inputs": ["{workspaceRoot}/dist/page/**/*"],
       "dependsOn": [
         {
           "target": "build",
@@ -10,7 +11,7 @@
         }
       ],
       "options": {
-        "directory": "./dist/page/"
+        "directory": "{workspaceRoot}/dist/page/"
       },
       "cache": true
     }

@@ -7,8 +7,8 @@ drawing:
   persist: false
 mdc: true
 colorSchema: light
-# coverAuthor: Group 4
-# author: Group 4
+coverAuthor: Group 4
+author: Group 4
 hideInToc: true
 fonts:
   sans: Roboto
