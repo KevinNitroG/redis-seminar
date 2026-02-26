@@ -52,3 +52,8 @@ jobs:
             --target=deploy \
             --parallel \
             --max-parallel=5
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: slides
+          path: dist/release/
