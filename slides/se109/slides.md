@@ -29,3 +29,15 @@ exportFilename: redis-se109
 layout: table-of-contents
 hideInToc: true
 ---
+
+---
+hideInToc: true
+---
+
+```{1-2|1-5}
+127.0.0.1:6379> [COMMAND 1]
+[OUTPUT 1]
+
+127.0.0.1:6379> [COMMAND 2]
+[OUTPUT 2]
+```

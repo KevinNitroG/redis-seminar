@@ -76,17 +76,24 @@ Focus: Fast-paced syntax, code snippets showing how data maps to Redis. Each com
 - Visual Element: Array of 0s and 1s representing a calendar/attendance sheet
 - Code Snippet:
   - `SETBIT attendance:SE359.Q21:2026-03-01 23521476 1`
-    > Extremely memory efficient for tracking thousands of students
+  - `GETBIT attendance:SE359.Q21:2026-03-01 23521476`
+  - `BITCOUNT attendance:SE359.Q21:2026-03-01`
+  - `BITFIELD attendance:SE359.Q21:2026-03-01 GET u8 23521476`
+  - `BITOP OR attendance:SE359.Q21:2026-03-01 attendance:SE359.Q21:2026-03-02 attendance:SE359.Q21:present`
 
 ## Section 3: Advanced Patterns & Data Structures (5 mins)
 
-_Focus: Moving beyond basic caching to real-time features._
-
-- Sub-section A: Pub/Sub vs. Streams
+- Caching
+  - Cache aside: https://images.viblo.asia/5e812aa3-0d82-4e71-bc64-ab1deaf733d7.png
+  - Read through: https://images.viblo.asia/8e7b044d-1732-4f3a-8512-cf6711fbad04.png
+  - Write through: https://images.viblo.asia/3d6358f8-6af6-4abd-aded-948797ef2731.png
+  - Write back: https://images.viblo.asia/383eae8c-acd1-42d4-a28e-88e15da2fc04.png
+  - Sources of above images: [Viblo - Sử dụng Redis làm cache để tăng tốc độ truy vấn](https://viblo.asia/p/su-dung-redis-lam-cache-de-tang-toc-do-truy-van-GrLZD0dwZk0)
+- Pub/Sub vs. Streams
   - Visual Element: Diagram showing "Fire-and-Forget" (Pub/Sub) vs. "Append-only Log with Consumer Groups" (Streams)
   - Code Snippet (Pub/Sub): `PUBLISH alerts:uit "Trời mưa, sảnh B trơn trượt!"` (Real-time, no persistence)
   - Code Snippet (Streams): `XADD enrollments * student_id 23521476 course_id SE121.Q21` (Persistent, async processing by workers)
-- Sub-section B: RedisJSON & RediSearch
+- RedisJSON & RediSearch
   - Visual Element: Diagram of a JSON document being indexed into a RediSearch inverted index
   - Code Snippet:
     - Store: `JSON.SET student:23521476 $ '{"name":"Đặng Phú Thiện", "gpa": 9.2, "cohort":"23"}'`
@@ -115,9 +122,13 @@ Focus: Modern deployment realities
 
 - Visual Element: Logos of Redis, Valkey, DragonflyDB, Kubernetes
 - Talking Points:
-  - K8s: Redis Enterprise Operator exists, but OSS Redis requires custom Helm charts (Bitnami) or operators
-  - License Shift: Redis moved away from pure OSS
+  - K8s: Redis Enterprise Operator exists but not free. OSS Redis: Helm charts (Bitnami) or [Redis Operator from OT Container Kit](https://ot-container-kit.github.io/redis-operator/)
   - Alternatives: Valkey (Linux Foundation fork, drop-in replacement), DragonflyDB (multi-threaded, highly performant alternative)
+    - Benchmarks: https://github.com/centminmod/redis-comparison-benchmarks
+    - Import some images (source: https://github.com/centminmod/redis-comparison-benchmarks):
+      - Multi thread: https://github.com/centminmod/redis-comparison-benchmarks/raw/master/results/benchmarks-v5-host-4t-jun7-2025/advcharts-comparison-stack.png
+      - Throughput: https://github.com/centminmod/redis-comparison-benchmarks/raw/master/results/benchmarks-v5-host-4t-jun7-2025/advcharts-comparison.png
+      - Latency: https://github.com/centminmod/redis-comparison-benchmarks/raw/master/results/benchmarks-v5-host-4t-jun7-2025/advcharts-latency-dist.png
 
 ## Section 6: Real Project Design - UIT Course Manager (4 mins)
 
@@ -195,7 +206,10 @@ paths:
             type: number
       responses:
         200:
-          description: Array of matched students
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Student'
 components:
   schemas:
     Student:
@@ -204,6 +218,9 @@ components:
         id:
           type: string
           example: '23521476'
+        username:
+          type: string
+          example: thiendp
         name:
           type: string
           example: Đặng Phú Thiện
@@ -216,8 +233,6 @@ components:
 ```
 
 ## Section 7: Final Thoughts & Resources (1 min)
-
-_Focus: Key takeaways._
 
 - When to use Redis: High-speed caching, leaderboards, session management, real-time streams/chat, and full-text search over JSON
 - Books to Read:
