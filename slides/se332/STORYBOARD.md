@@ -295,6 +295,11 @@ Focus: Fast-paced syntax, code snippets showing how data maps to Redis. Each com
   - AGGREGATE for analytics and grouping
   - Best for: Search features, analytics, complex filtering
 
+### Other
+
+- Redis supports geospatial, time-series, probabilistic (HyperLogLog, Cuckoo Filter, Count-min sketch, Top-K, t-digest), Vector Set but we will skip for brevity
+- Redis vector database benchmarks: https://cdn.sanity.io/images/sy1jschh/production/40954abf490e6598d3a1cad0bd5503d3386e7faf-655x450.svg
+
 ## Section 4: Persistence, Durability & ACID (3 mins)
 
 Focus: Dispelling the "Redis loses data when it restarts" myth
