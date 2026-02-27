@@ -45,6 +45,8 @@ jobs:
           git config --global user.name "GitHub Actions [Bot]"
 
       - name: Run Nx
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pnpm nx affected \
             --target=build \
