@@ -1,6 +1,6 @@
 ---
 name: slide
-description: Styleguide for spefic use cases of Slidev while creating slides for Redis. Should read when starting to create slides.
+description: Styleguide while creating Slidev slides for Redis. Must read when starting to create slides.
 ---
 
 # Slidev Style Guide
@@ -23,6 +23,12 @@ description: Styleguide for spefic use cases of Slidev while creating slides for
 - Each slide should have slidev `presenter notes` for main ideas in bullets
 - For those slides with image fullscreen (benchmark,...), use `layout: figure` from `academy` theme
 
+## Resources
+
+- Icon resource can taken from this `https://cdn.jsdelivr.net/gh/selfhst/icons@main/svg/{TECHNOLOGY}.svg`
+  > Replace `{TECHNOLOGY}` (e.g. `redis`, `valkey`)
+
 ## Templates
 
 - For redis command introduction, read [Command Template](assets/command_template.md)
+  > Use syntax `sh` for redis command code blocks

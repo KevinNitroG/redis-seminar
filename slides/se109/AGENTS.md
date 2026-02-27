@@ -5,3 +5,5 @@ Written with Slidev.
 For more information how to use, consider read `slidev` skill or using Context7 on `websites/sli_dev`
 
 ## Slidev Style Guide
+
+Use skill `slide` or reading that skill in `./.agents/skills/slide/SKILL.md`

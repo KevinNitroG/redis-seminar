@@ -1,0 +1,422 @@
+# yaml-language-server: $schema=https://www.schemastore.org/openapi-3.X.json
+openapi: 3.0.0
+info:
+  title: UIT Course & Student Manager API
+  version: 1.0.0
+  description: Comprehensive CRUD API powered by Redis Stack (RedisJSON + RediSearch)
+paths:
+  /students:
+    post:
+      summary: Create a new student (JSON.SET)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentCreate'
+      responses:
+        201:
+          description: Student created
+    get:
+      summary: List all students with pagination
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        200:
+          description: List of students
+  /students/{id}:
+    get:
+      summary: Get student by ID (JSON.GET)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Student found
+    patch:
+      summary: Partially update student (JSON.SET on paths)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentUpdate'
+      responses:
+        200:
+          description: Student updated
+    put:
+      summary: Replace entire student record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentCreate'
+      responses:
+        200:
+          description: Student replaced
+    delete:
+      summary: Delete student by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Student deleted
+  /students/search:
+    get:
+      summary: Search students (FT.SEARCH with filters)
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+          description: Full-text search (name, username)
+        - name: cohort
+          in: query
+          schema:
+            type: string
+          description: Filter by cohort
+        - name: minGpa
+          in: query
+          schema:
+            type: number
+          description: Minimum GPA
+        - name: maxGpa
+          in: query
+          schema:
+            type: number
+          description: Maximum GPA
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [gpa, name, cohort]
+            default: gpa
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        200:
+          description: Search results
+  /courses:
+    post:
+      summary: Create a new course (JSON.SET)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseCreate'
+      responses:
+        201:
+          description: Course created
+    get:
+      summary: List all courses with pagination
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        200:
+          description: List of courses
+  /courses/{id}:
+    get:
+      summary: Get course by ID (JSON.GET)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Course found
+    patch:
+      summary: Partially update course (JSON.SET on paths)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseUpdate'
+      responses:
+        200:
+          description: Course updated
+    put:
+      summary: Replace entire course record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseCreate'
+      responses:
+        200:
+          description: Course replaced
+    delete:
+      summary: Delete course by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Course deleted
+  /courses/search:
+    get:
+      summary: Search courses (FT.SEARCH with filters)
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+          description: Full-text search (name, lecturer)
+        - name: lecturer
+          in: query
+          schema:
+            type: string
+          description: Filter by lecturer name
+        - name: hasCapacity
+          in: query
+          schema:
+            type: boolean
+          description: Filter courses with available seats
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [name, lecturer, enrolled, capacity]
+            default: name
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+      responses:
+        200:
+          description: Search results
+  /courses/{courseId}/students:
+    post:
+      summary: Enroll student in course (XADD + SADD)
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                studentId:
+                  type: string
+      responses:
+        201:
+          description: Student enrolled
+    get:
+      summary: Get all enrolled students in course
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of enrolled students
+  /courses/{courseId}/students/{studentId}:
+    delete:
+      summary: Unenroll student from course
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Student unenrolled
+components:
+  schemas:
+    Student:
+      type: object
+      properties:
+        id:
+          type: string
+          example: '23521476'
+        username:
+          type: string
+          example: thiendp
+        name:
+          type: string
+          example: Dang Phu Thien
+        cohort:
+          type: string
+          example: '23'
+        gpa:
+          type: number
+          example: 9.2
+        enrollments:
+          type: array
+          items:
+            type: string
+          example: ['SE332.Q21', 'SE121.Q21']
+    StudentCreate:
+      type: object
+      required:
+        - id
+        - username
+        - name
+        - cohort
+        - gpa
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        name:
+          type: string
+        cohort:
+          type: string
+        gpa:
+          type: number
+    StudentUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+        name:
+          type: string
+        cohort:
+          type: string
+        gpa:
+          type: number
+    Course:
+      type: object
+      properties:
+        id:
+          type: string
+          example: SE332.Q21
+        name:
+          type: string
+          example: Chuyen de CSDL nang cao
+        lecturer:
+          type: object
+          properties:
+            name:
+              type: string
+              example: Tran Thi Hong Yen
+        practice:
+          type: array
+          items:
+            type: string
+        capacity:
+          type: integer
+          example: 30
+        enrolled:
+          type: integer
+          example: 3
+        students:
+          type: array
+          items:
+            type: string
+    CourseCreate:
+      type: object
+      required:
+        - id
+        - name
+        - lecturer
+        - capacity
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        lecturer:
+          type: object
+          properties:
+            name:
+              type: string
+        practice:
+          type: array
+          items:
+            type: string
+        capacity:
+          type: integer
+    CourseUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        lecturer:
+          type: object
+          properties:
+            name:
+              type: string
+        practice:
+          type: array
+          items:
+            type: string
+        capacity:
+          type: integer
