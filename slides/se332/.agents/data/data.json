@@ -1,0 +1,136 @@
+{
+  "students": [
+    {
+      "id": "23521476",
+      "username": "thiendp",
+      "name": "Đặng Phú Thiện",
+      "cohort": "23",
+      "gpa": 9.2
+    },
+    {
+      "id": "23520952",
+      "username": "minhpl",
+      "name": "Phan Lê Minh",
+      "cohort": "23",
+      "gpa": 9.0
+    },
+    {
+      "id": "23520161",
+      "username": "binhnt",
+      "name": "Trần Nguyễn Thái Bình",
+      "cohort": "23",
+      "gpa": 8.5
+    },
+    {
+      "id": "23521049",
+      "username": "giangnt",
+      "name": "Nguyễn Thái Gia Nguyễn",
+      "cohort": "23",
+      "gpa": 8.9
+    },
+    {
+      "id": "24521574",
+      "username": "tuanld",
+      "name": "Mai Phú Tân",
+      "cohort": "24",
+      "gpa": 6
+    }
+  ],
+  "courses": [
+    {
+      "id": "PE232.Q21",
+      "name": "Giáo dục thể chất 2",
+      "theory": "Cao Hồng Châu"
+    },
+    {
+      "id": "SE121.Q21",
+      "name": "Đồ án 1",
+      "theory": "Trần Hạnh Xuân"
+    },
+    {
+      "id": "SE332.Q21",
+      "name": "Chuyên đề CSDL nâng cao",
+      "theory": "Trần Thị Hồng Yến"
+    },
+    {
+      "id": "SE109.Q21",
+      "name": "Phát triển, vận hành, bảo trì phần mềm",
+      "theory": "Nguyễn Thị Thanh Trúc"
+    },
+    {
+      "id": "SE359.Q21",
+      "name": "DevOps trong phát triển phần mềm",
+      "theory": "Kiệt Võ Tuấn",
+      "practice": "Quan Chí Khánh An"
+    },
+    {
+      "id": "SE361.Q21",
+      "name": "Phát triển Phần mềm theo Kiến trúc Microservices",
+      "theory": "Nguyễn Duy Khánh",
+      "practice": "Đặng Việt Dũng"
+    },
+    {
+      "id": "SS003.Q12",
+      "name": "Tư tưởng Hồ Chí Minh",
+      "theory": "Phạm Thị Thu Hương"
+    },
+    {
+      "id": "PE231.Q15",
+      "name": "Giáo dục thể chất 1"
+    },
+    {
+      "id": "SE113.Q11",
+      "name": "Kiểm chứng phần mềm",
+      "theory": "Nguyễn Thị Thanh Trúc",
+      "practice": ["Nguyễn Ngọc Quí", "Nguyễn Trịnh Đông"]
+    },
+    {
+      "id": "SE313.Q11",
+      "name": "Một số thuật toán thông minh",
+      "theory": "Nguyễn Thị Xuân Hương"
+    },
+    {
+      "id": "SE357.Q12",
+      "name": "Kỹ thuật phân tích yêu cầu",
+      "theory": "Nguyễn Trịnh Đông",
+      "practice": ["Đặng Việt Dũng", "Lê Văn Tuấn"]
+    },
+    {
+      "id": "SE358.Q12",
+      "name": "Quản lý dự án Phát triển Phần mềm",
+      "theory": "Lê Văn Tuấn",
+      "practice": "Trần Anh Dũng"
+    },
+    {
+      "id": "SS004.P22",
+      "name": "Kỹ năng nghề nghiệp",
+      "theory": "Đoàn Duy"
+    },
+    {
+      "id": "SS008.P25",
+      "name": "Kinh tế chính trị Mác – Lênin",
+      "theory": "Trương Thị Thanh Thùy"
+    },
+    {
+      "id": "SS010.P21",
+      "name": "Lịch sử Đảng Cộng sản Việt Nam",
+      "theory": "Nguyễn Thị Thảo"
+    },
+    {
+      "id": "SE101.P21",
+      "name": "Phương pháp mô hình hóa",
+      "theory": "Nguyễn Công Hoan"
+    },
+    {
+      "id": "SE104.P22",
+      "name": "Nhập môn Công nghệ phần mềm",
+      "theory": "Đỗ Thị Thanh Tuyền",
+      "practice": "Đặng Việt Dũng"
+    },
+    {
+      "id": "SE114.P23",
+      "name": "Nhập môn ứng dụng di động",
+      "theory": ["Nguyễn Tấn Toàn", "Trinh Huỳnh Hồ Thị Mộng"]
+    }
+  ]
+}
