@@ -2,11 +2,11 @@
 
 Data for student, courses with lecturer is at [data.json](./data.json)
 
-Target Time: 20 Minutes
+Target Time: 10 Minutes
 
-Audience: University Students & Lecturer (Familiar with SQL/MongoDB)
+Audience: University Students & Lecturer
 
-## Section 1: Introduction to Redis (Brief - 1.5 mins)
+## Section 1: Introduction to Redis (Brief)
 
 Focus: Fast context setting
 
@@ -39,7 +39,7 @@ Focus: Fast context setting
 
   - Keep in mind redis is key value, and the keyspace is flat
 
-## Section 2: Core Data Types & Commands (UIT Context) (4 mins)
+## Section 2: Core Data Types & Commands (UIT Context)
 
 Focus: Fast-paced syntax, code snippets showing how data maps to Redis. Each command shows time complexity, output of command
 
@@ -126,7 +126,7 @@ Focus: Fast-paced syntax, code snippets showing how data maps to Redis. Each com
   - BITOP: Combine attendance patterns (both present, at least one present, etc.)
   - Perfect for: Attendance tracking, feature flags, user online status, historical analytics
 
-## Section 3: Advanced Patterns & Data Structures (5 mins)
+## Section 3: Advanced Patterns & Data Structures
 
 ### Caching
 
@@ -180,48 +180,6 @@ Focus: Fast-paced syntax, code snippets showing how data maps to Redis. Each com
   - Best for: Real-time notifications, alerts, live updates
 - socket.io Redis Adapter: https://raw.githubusercontent.com/socketio/socket.io-redis-adapter/main/assets/adapter.png
 
-### Streams
-
-- Visual Element: Diagram showing "Append-only Log with Consumer Groups" for durable event processing
-- Use Case: Event sourcing, task queues, audit logs (with persistence)
-- Code Snippets:
-
-  ```
-  # Log enrollment event
-  XADD enrollments * student_id 23521476 course_id SE121.Q21 timestamp 2026-03-01T10:30:00Z lecturer "Trần Hạnh Xuân"
-  # Returns: 1740825000000-0 (stream ID)
-
-  # Log GPA update event
-  XADD student:23521476:events * event_type gpa_update old_gpa 9.0 new_gpa 9.2 timestamp 2026-03-01T14:00:00Z
-
-  # Log course availability change
-  XADD course:SE332.Q21:events * event_type seats_changed old_seats 30 new_seats 28 timestamp 2026-03-01T09:15:00Z
-
-  # Read all events from stream
-  XRANGE enrollments - +
-
-  # Read last 5 enrollment events
-  XREVRANGE enrollments + - COUNT 5
-
-  # Create consumer group for workers
-  XGROUP CREATE enrollments group_processors $ MKSTREAM
-
-  # Worker reads pending enrollments
-  XREADGROUP GROUP group_processors worker1 COUNT 2 STREAMS enrollments >
-
-  # Worker acknowledges processing
-  XACK enrollments group_processors 1740825000000-0
-
-  # Monitor unprocessed messages in group
-  XPENDING enrollments group_processors
-  ```
-
-- Key Points:
-  - Persisted event log (survives restarts)
-  - Consumer groups enable parallel processing
-  - Each message has guaranteed delivery semantics
-  - Best for: Event sourcing, task queues, audit logs, async workflows
-
 ### RedisJSON
 
 - Use Case: Complex nested documents, atomic updates, structured data
@@ -265,62 +223,12 @@ Focus: Fast-paced syntax, code snippets showing how data maps to Redis. Each com
   - Commands are atomic at JSON path level
   - Best for: User profiles, configurations, complex documents
 
-### RediSearch
-
-- Use Case: Full-text search, aggregations, complex filtering
-- Code Snippets:
-
-  ```
-  # Create index on student data
-  FT.CREATE idx:students ON JSON PREFIX 1 student: SCHEMA $.name TEXT WEIGHT 2.0 $.cohort TAG $.gpa NUMERIC $.username TEXT
-
-  # Create index on courses
-  FT.CREATE idx:courses ON JSON PREFIX 1 course: SCHEMA $.name TEXT $.lecturer.name TEXT $.id TAG
-
-  # Search: Find all K23 students
-  FT.SEARCH idx:students "@cohort:{23}"
-
-  # Search: Find students with GPA >= 9.0
-  FT.SEARCH idx:students "@gpa:[9.0 +inf]"
-
-  # Search: Find K23 students with GPA between 8.5 and 9.5
-  FT.SEARCH idx:students "@cohort:{23} @gpa:[8.5 9.5]"
-
-  # Search: Find student by name (full-text)
-  FT.SEARCH idx:students "Đặng Phú"
-
-  # Search: Case-insensitive username search
-  FT.SEARCH idx:students "@username:thiendp"
-
-  # Search with sorting: Top students in K23
-  FT.SEARCH idx:students "@cohort:{23}" SORTBY gpa DESC LIMIT 0 3
-
-  # Aggregate: Count students by cohort
-  FT.AGGREGATE idx:students "*" GROUPBY 1 @cohort REDUCE COUNT 0 AS student_count
-
-  # Search courses: Find all courses taught by "Trần Thị Hồng Yến"
-  FT.SEARCH idx:courses "Trần Thị Hồng Yến"
-
-  # Search: Find courses by course ID pattern
-  FT.SEARCH idx:courses "@id:{SE*}"
-
-  # Aggregate: Count courses by lecturer (complex aggregation)
-  FT.AGGREGATE idx:courses "*" GROUPBY 1 @lecturer.name REDUCE COUNT 0 AS course_count SORTBY course_count DESC
-  ```
-
-- Key Points:
-  - Indexes built on JSON field paths
-  - TAG fields for exact matching, TEXT for full-text search, NUMERIC for ranges
-  - Supports complex queries combining multiple conditions
-  - AGGREGATE for analytics and grouping
-  - Best for: Search features, analytics, complex filtering
-
 ### Other
 
-- Redis supports geospatial, time-series, probabilistic (HyperLogLog, Cuckoo Filter, Count-min sketch, Top-K, t-digest), Vector Set but we will skip for brevity
+- Redis supports geospatial, time-series, probabilistic (HyperLogLog, Cuckoo Filter, Count-min sketch, Top-K, t-digest), Vector Set, Stream, RediSearch but we will skip for brevity
 - Redis vector database benchmarks: https://cdn.sanity.io/images/sy1jschh/production/40954abf490e6598d3a1cad0bd5503d3386e7faf-655x450.svg
 
-## Section 4: Persistence, Durability & ACID (3 mins)
+## Section 4: Persistence, Durability & ACID
 
 Focus: Dispelling the "Redis loses data when it restarts" myth
 
@@ -382,15 +290,7 @@ EXEC
       - Throughput: https://github.com/centminmod/redis-comparison-benchmarks/raw/master/results/benchmarks-v5-host-4t-jun7-2025/advcharts-comparison.png
       - Latency: https://github.com/centminmod/redis-comparison-benchmarks/raw/master/results/benchmarks-v5-host-4t-jun7-2025/advcharts-latency-dist.png
 
-## Section 6: Real Project Design - UIT Course Manager (4 mins)
-
-Focus: Architecture and API Design using Node.js + Redis OM
-
-- Visual Element: Architecture Diagram: Frontend -> Node.js Backend -> Redis Stack (RedisJSON + RediSearch)
-- OpenAPI Specification (YAML): Showcase this heavily on the slide to prove how we map REST to Redis
-  > [openapi.yaml](./openapi.yaml)
-
-## Section 7: Final Thoughts & Resources (1 min)
+## Section 6: Final Thoughts & Resources (1 min)
 
 - When to use Redis: High-speed caching, leaderboards, session management, real-time streams/chat, and full-text search over JSON
 - Authentik removed Redis (simplicity dev & deploy):

@@ -9,7 +9,8 @@ description: Styleguide while creating Slidev slides for Redis. Must read when s
 
 - Write less words, more diagrams, code snippets, and images
 - Avoid using animation like in bullet points. Just use for command codeblocks or important points
-- Use `academy` theme, read from [Academy Theme](https://raw.githubusercontent.com/alexanderdavide/slidev-theme-academic/refs/heads/master/README.md)
+- Use `academic` theme, read from [Academic Theme](https://raw.githubusercontent.com/alexanderdavide/slidev-theme-academic/refs/heads/master/README.md)
+  > [Example](https://raw.githubusercontent.com/alexanderdavide/slidev-theme-academic/refs/heads/master/example.md)
 - For pages with layout center, use
   ```
   layout: center
@@ -21,7 +22,7 @@ description: Styleguide while creating Slidev slides for Redis. Must read when s
 - Avoid long content, consider splitting into multiple pages
 - Add source URLs into slide for reference
 - Each slide should have slidev `presenter notes` for main ideas in bullets
-- For those slides with image fullscreen (benchmark,...), use `layout: figure` from `academy` theme
+- For those slides with image fullscreen (benchmark,...), use `layout: figure` from `academic` theme
 
 ## Resources
 
