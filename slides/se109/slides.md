@@ -1,6 +1,6 @@
 ---
 theme: academic
-title: Redis
+title: 'Redis: A Primary Database'
 class: text-center
 transition: slide-left
 drawing:
@@ -12,32 +12,39 @@ author: Group 4
 hideInToc: true
 fonts:
   sans: Roboto
-  serif: Roboto Slab
   mono: Fira Code
 themeConfig:
   paginationX: r
   paginationY: t
-  paginationPagesDisabled: [1]
+  paginationPagesDisabled:
+    - 1
 exportFilename: redis-se109
 ---
 
 # Redis
 
-### A powerful in-memory data structure store
+### A Powerful In-Memory Data Structure Store
 
 ---
-layout: table-of-contents
-hideInToc: true
+src: ./pages/intro/slides.md
 ---
 
 ---
-hideInToc: true
+src: ./pages/datatypes/slides.md
 ---
 
-```{1-2|1-5}
-127.0.0.1:6379> [COMMAND 1]
-[OUTPUT 1]
+---
+src: ./pages/advanced/slides.md
+---
 
-127.0.0.1:6379> [COMMAND 2]
-[OUTPUT 2]
-```
+---
+src: ./pages/persistence/slides.md
+---
+
+---
+src: ./pages/ecosystem/slides.md
+---
+
+---
+src: ./pages/final/slides.md
+---

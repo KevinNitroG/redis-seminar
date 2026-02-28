@@ -1,0 +1,15 @@
+127.0.0.1:6379> WATCH course:SE121.Q21:seats
+OK
+
+127.0.0.1:6379> MULTI
+OK
+
+127.0.0.1:6379> DECR course:SE121.Q21:seats
+QUEUED
+
+127.0.0.1:6379> SADD course:SE121.Q21:students "23521476"
+QUEUED
+
+127.0.0.1:6379> EXEC
+1) (integer) 0
+2) (integer) 1

@@ -1,0 +1,9 @@
+127.0.0.1:6379> MSET student:24521574:name "Mai Phú Tân" student:24521574:username "maipht" student:24521574:cohort "24" student:24521574:gpa "6"
+OK
+
+127.0.0.1:6379> MGET student:24521574:name student:24521574:username
+1) "Mai Phú Tân"
+2) "maipht"
+
+127.0.0.1:6379> SET student:username:maipht "24521574"
+OK

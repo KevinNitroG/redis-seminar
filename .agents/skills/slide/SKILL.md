@@ -8,20 +8,21 @@ description: Styleguide while creating Slidev slides for Redis. Must read when s
 ## General guidelines
 
 - Write less words, more diagrams, code snippets, and images
-- Avoid using animation like in bullet points. Just use for command codeblocks or important points
-- Use `academic` theme, read from [Academic Theme](https://raw.githubusercontent.com/alexanderdavide/slidev-theme-academic/refs/heads/master/README.md)
-  > [Example](https://raw.githubusercontent.com/alexanderdavide/slidev-theme-academic/refs/heads/master/example.md)
-- For pages with layout center, use
+- Avoid using animation (v-clicks,...), especially like in bullet points (show all immediately). Just use for command codeblocks or important points
+- Avoid using deep custom script, css, html (custom div, span), try to be simple
+- Use `academic` theme, read from [Academic Theme](./assets/academic-theme-usage.md) and [Academic Example](./assets/academic-example.md)
+- For pages with layout center (transition slide, introduce next section, intro slide,...), use
   ```
   layout: center
   class: text-center
   transition: slide-up
   ```
 - Other content page don't use transition, use `hideInToc: true`
-- Two column layout use `layout: two-cols-header` or `layout: two-cols` with `layoutClass: gap-8`
+- Two column layout use `layout: two-cols-header` or `layout: two-cols` with `layoutClass: gap-8`, don't manually using div
 - Avoid long content, consider splitting into multiple pages
 - Add source URLs into slide for reference
-- Each slide should have slidev `presenter notes` for main ideas in bullets
+- Don't adding images into a slide that already has a lot of content, consider splitting into multiple pages or use `layout: figure` to make image fullscreen
+- Each main content slide should have slidev `presenter notes` for main ideas in bullets. Skip for not important slides (transition, intro, conclusion,...)
 - For those slides with image fullscreen (benchmark,...), use `layout: figure` from `academic` theme
 
 ## Resources
@@ -31,5 +32,5 @@ description: Styleguide while creating Slidev slides for Redis. Must read when s
 
 ## Templates
 
-- For redis command introduction, read [Command Template](assets/command_template.md)
+- For redis command introduction, read [Command Template](references/command_template.md)
   > Use syntax `sh` for redis command code blocks

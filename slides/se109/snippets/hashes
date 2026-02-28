@@ -1,0 +1,19 @@
+127.0.0.1:6379> HSET student:24521574 name "Mai Phú Tân" username "tanmp" cohort "24" gpa "6"
+(integer) 4
+
+127.0.0.1:6379> HGETALL student:24521574
+1) "name"
+2) "Mai Phú Tân"
+3) "username"
+4) "tanmp"
+5) "cohort"
+6) "24"
+7) "gpa"
+8) "6"
+
+127.0.0.1:6379> HGET student:24521574 name
+"Mai Phú Tân"
+
+127.0.0.1:6379> HMGET student:24521574 name gpa
+1) "Mai Phú Tân"
+2) "6"

@@ -1,0 +1,14 @@
+127.0.0.1:6379> SUBSCRIBE course:SE332.Q21:deadline
+Reading messages... (press Ctrl-C to quit)
+1) "subscribe"
+2) "course:SE332.Q21:deadline"
+3) (integer) 1
+
+127.0.0.1:6379> PUBLISH course:SE332.Q21:deadline "Assignment 3 deadline: 2026-03-15 23:59"
+(integer) 2
+
+127.0.0.1:6379> PSUBSCRIBE course:*:deadline
+Reading messages... (press Ctrl-C to quit)
+1) "psubscribe"
+2) "course:*:deadline"
+3) (integer) 1

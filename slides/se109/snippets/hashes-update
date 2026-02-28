@@ -1,0 +1,5 @@
+127.0.0.1:6379> GET student:24521574
+(error) WRONGTYPE Operation against a key holding the wrong kind of value
+
+127.0.0.1:6379> INCRBYFLOAT student:24521574 gpa 0.5
+"6.5"

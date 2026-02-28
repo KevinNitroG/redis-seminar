@@ -1,0 +1,14 @@
+127.0.0.1:6379> JSON.SET student:23521476 $.gpa 9.3
+OK
+
+127.0.0.1:6379> JSON.ARRAPPEND student:23521476 $.enrollments '"SE113.Q11"'
+1) (integer) 3
+
+127.0.0.1:6379> JSON.SET course:SE332.Q21 $ '{"id":"SE332.Q21","name":"Chuyên đề CSDL nâng cao","lecturer":{"name":"Trần Thị Hồng Yến"},"capacity":30,"enrolled":3}'
+OK
+
+127.0.0.1:6379> JSON.GET course:SE332.Q21 $.lecturer.name
+"[\"Trần Thị Hồng Yến\"]"
+
+127.0.0.1:6379> JSON.NUMINCRBY course:SE332.Q21 $.enrolled 1
+"[4]"

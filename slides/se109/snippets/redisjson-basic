@@ -1,0 +1,8 @@
+127.0.0.1:6379> JSON.SET student:23521476 $ '{"id":"23521476","username":"thiendp","name":"Đặng Phú Thiện","cohort":"23","gpa":9.2,"enrollments":["SE332.Q21","SE121.Q21"]}'
+OK
+
+127.0.0.1:6379> JSON.GET student:23521476
+"{\"id\":\"23521476\",\"username\":\"thiendp\",\"name\":\"Đặng Phú Thiện\",\"cohort\":\"23\",\"gpa\":9.2,\"enrollments\":[\"SE332.Q21\",\"SE121.Q21\"]}"
+
+127.0.0.1:6379> JSON.GET student:23521476 $.name $.cohort
+"{\"$.name\":[\"Đặng Phú Thiện\"],\"$.cohort\":[\"23\"]}"

@@ -1,0 +1,15 @@
+127.0.0.1:6379> SADD course:SE121.Q21:students "23521476" "23520952"
+(integer) 2
+
+127.0.0.1:6379> SMEMBERS course:SE121.Q21:students
+1) "23521476"
+2) "23520952"
+
+127.0.0.1:6379> SISMEMBER course:SE121.Q21:students "23521476"
+(integer) 1
+
+127.0.0.1:6379> SCARD course:SE121.Q21:students
+(integer) 2
+
+127.0.0.1:6379> SREM course:SE121.Q21:students "23520952"
+(integer) 1
