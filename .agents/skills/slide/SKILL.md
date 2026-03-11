@@ -24,6 +24,10 @@ description: Styleguide while creating Slidev slides for Redis. Must read when s
 - Don't adding images into a slide that already has a lot of content, consider splitting into multiple pages or use `layout: figure` to make image fullscreen
 - Each main content slide should have slidev `presenter notes` for main ideas in bullets. Skip for not important slides (transition, intro, conclusion,...)
 - For those slides with image fullscreen (benchmark,...), use `layout: figure` from `academic` theme
+- Each markdown files in each sections may contains multiple slidev pages, not need one page per file
+- Each inner markdown file's header need to be smaller than outer. For example the header of `what.md` should be `##` since the header of `slides.md` is `#`
+- Avoid using emoji in slide content, headers
+- Don't number filename or folder name
 
 ## Resources
 

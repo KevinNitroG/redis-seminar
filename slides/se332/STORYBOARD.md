@@ -353,14 +353,14 @@ EXEC
 
 ### Race Condition: The "Double-Booking" Problem
 
-| Time   | Student A (Client 1)             | Student B (Client 2)      | Redis State / Result        |
-| :----- | :------------------------------- | :------------------------ | :-------------------------- |
-| **T1** | `WATCH course:SE121:seats`       |                           | Monitoring `seats` key      |
-| **T2** |                                  | `DECR course:SE121:seats` | **Seat taken by Student B** |
-| **T3** | `MULTI`                          |                           | Transaction starts          |
-| **T4** | `DECR course:SE121:seats`        |                           | Command queued              |
-| **T5** | `SADD course:SE121:students "A"` |                           | Command queued              |
-| **T6** | `EXEC`                           |                           | **Returns (nil)**           |
+| Time | Student A (Client 1)             | Student B (Client 2)      | Redis State / Result    |
+| :--- | :------------------------------- | :------------------------ | :---------------------- |
+| T1   | `WATCH course:SE121:seats`       |                           | Monitoring `seats` key  |
+| T2   |                                  | `DECR course:SE121:seats` | Seat taken by Student B |
+| T3   | `MULTI`                          |                           | Transaction starts      |
+| T4   | `DECR course:SE121:seats`        |                           | Command queued          |
+| T5   | `SADD course:SE121:students "A"` |                           | Command queued          |
+| T6   | `EXEC`                           |                           | Returns (nil)           |
 
 > In slide design, show 2 code block with two columns layout
 
