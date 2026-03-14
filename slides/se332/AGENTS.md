@@ -1,10 +1,10 @@
 # Slidev for Redis
 
-Written with Slidev.
+Written with Slidev, managed with pnpm
 
 For more information how to use, consider read `slidev` skill or using Context7 on `websites/sli_dev`
 
-@./STORYBOARD.md is the storyboard, outline for the slides
+Storyboard, outline for the slides is in @./STORYBOARD.md
 
 ## Slidev Style Guide
 
@@ -24,9 +24,16 @@ pages/
     string.md
     set.md
     ... (markdown files)
+  advanced/
+    ...
+  persistence/
+    ...
   ecosystem/
     ...
-
+  project/
+    ...
+  final/
+    ...
   ...
 ... Other structure match slidev general structure
 slides.md (source those inner slides.md)

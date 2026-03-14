@@ -5,35 +5,40 @@
       "username": "thiendp",
       "name": "Đặng Phú Thiện",
       "cohort": "23",
-      "gpa": 9.2
+      "gpa": 9.2,
+      "password": "thiendp"
     },
     {
       "id": "23520952",
       "username": "minhpl",
       "name": "Phan Lê Minh",
       "cohort": "23",
-      "gpa": 9.0
+      "gpa": 9.0,
+      "password": "minhpl"
     },
     {
       "id": "23520161",
       "username": "binhnt",
       "name": "Trần Nguyễn Thái Bình",
       "cohort": "23",
-      "gpa": 8.5
+      "gpa": 8.5,
+      "password": "binhnt"
     },
     {
       "id": "23521049",
-      "username": "giangnt",
+      "username": "nguyenntg",
       "name": "Nguyễn Thái Gia Nguyễn",
       "cohort": "23",
-      "gpa": 8.9
+      "gpa": 8.9,
+      "password": "nguyenntg"
     },
     {
       "id": "24521574",
-      "username": "tuanld",
+      "username": "tanmp",
       "name": "Mai Phú Tân",
       "cohort": "24",
-      "gpa": 6
+      "gpa": 6,
+      "password": "tanmp"
     }
   ],
   "courses": [

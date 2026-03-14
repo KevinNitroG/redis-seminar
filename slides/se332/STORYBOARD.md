@@ -387,8 +387,7 @@ EXEC
 Focus: Architecture and API Design using Node.js + Redis OM
 
 - Visual Element: Architecture Diagram: Frontend -> Node.js Backend -> Redis Stack (RedisJSON + RediSearch)
-- OpenAPI Specification (YAML): Showcase this heavily on the slide to prove how we map REST to Redis
-  > [openapi.yaml](./openapi.yaml)
+- OpenAPI Specification (YAML) [openapi.yaml](./openapi.yaml)
 
 ## Section 7: Final Thoughts & Resources (1 min)
 

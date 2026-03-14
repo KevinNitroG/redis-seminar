@@ -4,10 +4,16 @@ info:
   title: UIT Course & Student Manager API
   version: 1.0.0
   description: Comprehensive CRUD API powered by Redis Stack (RedisJSON + RediSearch)
+tags:
+  - name: student
+    description: Student management endpoints
+  - name: course
+    description: Course management endpoints
 paths:
   /students:
     post:
       summary: Create a new student (JSON.SET)
+      tags: [student]
       requestBody:
         required: true
         content:
@@ -17,8 +23,13 @@ paths:
       responses:
         201:
           description: Student created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
     get:
       summary: List all students with pagination
+      tags: [student]
       parameters:
         - name: limit
           in: query
@@ -33,9 +44,14 @@ paths:
       responses:
         200:
           description: List of students
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStudents'
   /students/{id}:
     get:
       summary: Get student by ID (JSON.GET)
+      tags: [student]
       parameters:
         - name: id
           in: path
@@ -45,8 +61,19 @@ paths:
       responses:
         200:
           description: Student found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+        404:
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     patch:
       summary: Partially update student (JSON.SET on paths)
+      tags: [student]
       parameters:
         - name: id
           in: path
@@ -62,8 +89,19 @@ paths:
       responses:
         200:
           description: Student updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+        404:
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     put:
       summary: Replace entire student record
+      tags: [student]
       parameters:
         - name: id
           in: path
@@ -79,8 +117,19 @@ paths:
       responses:
         200:
           description: Student replaced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+        404:
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: Delete student by ID
+      tags: [student]
       parameters:
         - name: id
           in: path
@@ -90,9 +139,16 @@ paths:
       responses:
         204:
           description: Student deleted
+        404:
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /students/search:
     get:
       summary: Search students (FT.SEARCH with filters)
+      tags: [student]
       parameters:
         - name: query
           in: query
@@ -129,9 +185,14 @@ paths:
       responses:
         200:
           description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentSearchResult'
   /courses:
     post:
       summary: Create a new course (JSON.SET)
+      tags: [course]
       requestBody:
         required: true
         content:
@@ -141,8 +202,13 @@ paths:
       responses:
         201:
           description: Course created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
     get:
       summary: List all courses with pagination
+      tags: [course]
       parameters:
         - name: limit
           in: query
@@ -157,9 +223,14 @@ paths:
       responses:
         200:
           description: List of courses
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCourses'
   /courses/{id}:
     get:
       summary: Get course by ID (JSON.GET)
+      tags: [course]
       parameters:
         - name: id
           in: path
@@ -169,8 +240,19 @@ paths:
       responses:
         200:
           description: Course found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+        404:
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     patch:
       summary: Partially update course (JSON.SET on paths)
+      tags: [course]
       parameters:
         - name: id
           in: path
@@ -186,8 +268,19 @@ paths:
       responses:
         200:
           description: Course updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+        404:
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     put:
       summary: Replace entire course record
+      tags: [course]
       parameters:
         - name: id
           in: path
@@ -203,8 +296,19 @@ paths:
       responses:
         200:
           description: Course replaced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+        404:
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: Delete course by ID
+      tags: [course]
       parameters:
         - name: id
           in: path
@@ -214,9 +318,16 @@ paths:
       responses:
         204:
           description: Course deleted
+        404:
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /courses/search:
     get:
       summary: Search courses (FT.SEARCH with filters)
+      tags: [course]
       parameters:
         - name: query
           in: query
@@ -248,9 +359,15 @@ paths:
       responses:
         200:
           description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseSearchResult'
   /courses/{courseId}/students:
     post:
       summary: Enroll student in course (XADD + SADD)
+      description: With transaction
+      tags: [course]
       parameters:
         - name: courseId
           in: path
@@ -269,8 +386,13 @@ paths:
       responses:
         201:
           description: Student enrolled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentResult'
     get:
       summary: Get all enrolled students in course
+      tags: [course]
       parameters:
         - name: courseId
           in: path
@@ -280,9 +402,25 @@ paths:
       responses:
         200:
           description: List of enrolled students
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  courseId:
+                    type: string
+                    example: SE332.Q21
+                  students:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Student'
+                  total:
+                    type: integer
+                    example: 3
   /courses/{courseId}/students/{studentId}:
     delete:
       summary: Unenroll student from course
+      tags: [course]
       parameters:
         - name: courseId
           in: path
@@ -297,6 +435,12 @@ paths:
       responses:
         204:
           description: Student unenrolled
+        404:
+          description: Course or student not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     Student:
@@ -304,7 +448,7 @@ components:
       properties:
         id:
           type: string
-          example: '23521476'
+          example: 23521476
         username:
           type: string
           example: thiendp
@@ -313,7 +457,7 @@ components:
           example: Dang Phu Thien
         cohort:
           type: string
-          example: '23'
+          example: 23
         gpa:
           type: number
           example: 9.2
@@ -321,7 +465,7 @@ components:
           type: array
           items:
             type: string
-          example: ['SE332.Q21', 'SE121.Q21']
+          example: [SE332.Q21, SE121.Q21]
     StudentCreate:
       type: object
       required:
@@ -352,6 +496,38 @@ components:
           type: string
         gpa:
           type: number
+    PaginatedStudents:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Student'
+        total:
+          type: integer
+          description: Total number of students matching the query
+          example: 42
+        limit:
+          type: integer
+          example: 10
+        offset:
+          type: integer
+          example: 0
+    StudentSearchResult:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Student'
+        total:
+          type: integer
+          description: Total number of matching students
+          example: 5
+        query:
+          type: string
+          description: The search query used
+          example: thien
     Course:
       type: object
       properties:
@@ -420,3 +596,61 @@ components:
             type: string
         capacity:
           type: integer
+    PaginatedCourses:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Course'
+        total:
+          type: integer
+          description: Total number of courses matching the query
+          example: 20
+        limit:
+          type: integer
+          example: 10
+        offset:
+          type: integer
+          example: 0
+    CourseSearchResult:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Course'
+        total:
+          type: integer
+          description: Total number of matching courses
+          example: 3
+        query:
+          type: string
+          description: The search query used
+          example: database
+    EnrollmentResult:
+      type: object
+      properties:
+        courseId:
+          type: string
+          example: SE332.Q21
+        studentId:
+          type: string
+          example: 23521476
+        enrolledAt:
+          type: string
+          format: date-time
+          example: 2026-03-14T10:00:00Z
+        streamId:
+          type: string
+          description: Redis Stream entry ID from XADD
+          example: 1741950000000-0
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not found
+        message:
+          type: string
+          example: Student with id 23521476 not found
