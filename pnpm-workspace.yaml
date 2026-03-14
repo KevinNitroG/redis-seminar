@@ -10,10 +10,10 @@ catalog:
 
 catalogs:
   slidev:
-    '@slidev/cli': 52.12.0
+    '@slidev/cli': 52.14.1
     playwright-chromium: 1.58.2
     slidev-theme-academic: 2.1.0
-    vue: 3.5.27
+    vue: 3.5.30
 
 onlyBuiltDependencies:
   - esbuild
