@@ -40,3 +40,4 @@ slides.md (source those inner slides.md)
 ```
 
 - Those sub `slides.md` in each section will source the markdown files in the same folder
+- There are exists project like this in ../se109/, but you should take it as a reference on how to creating slide. That project is less requirement on the structure

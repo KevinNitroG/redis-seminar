@@ -26,9 +26,18 @@ exportFilename: redis-se332
 ### A powerful in-memory data structure store
 
 ---
-
 layout: table-of-contents
 hideInToc: true
-
 ---
 
+---
+src: ./pages/persistence/slides.md
+---
+
+---
+src: ./pages/ecosystem/slides.md
+---
+
+---
+src: ./pages/final/slides.md
+---
