@@ -43,6 +43,9 @@ jobs:
       - name: Install Node Dependencies
         run: pnpm install
 
+      - name: Playwright Install
+        run: pnpm exec playwright install --with-deps
+
       - name: Setup Git User
         run: |
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -70,4 +73,7 @@ jobs:
         if: ${{ github.event.inputs.release == 'true' }}
         with:
           files: dist/release/*
+          tag_name: v${{ github.run_number }}
           make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
