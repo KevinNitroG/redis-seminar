@@ -11,6 +11,11 @@ on:
         required: true
         default: false
         type: boolean
+      forceNxRun:
+        description: Force Nx to run many instead of affected
+        required: true
+        default: false
+        type: boolean
       release:
         description: Release
         required: false
@@ -42,7 +47,7 @@ jobs:
           cache: pnpm
 
       - name: Derive SHAs for Nx Affected
-        id: set-shas
+        if: ${{ github.event.inputs.forceNxRun == 'false' }}
         uses: nrwl/nx-set-shas@v4
 
       - name: Install Node Dependencies
@@ -58,13 +63,13 @@ jobs:
 
       - name: Reset Nx Cache
         if: ${{ github.event.inputs.resetNxCache == 'true' }}
-        run: pnpm nx reset
+        run: pnpm exec nx reset
 
       - name: Run Nx
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pnpm nx affected \
+          pnpm exec nx ${{ github.event.inputs.forceNxRun == 'true' && 'run-many' || 'affected' }} \
             --target=build \
             --target=export \
             --target=deploy \
