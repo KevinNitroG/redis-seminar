@@ -2,9 +2,21 @@
   "name": "demo-1",
   "main": "src/index.js",
   "scripts": {
-    "run": "node src/index.js"
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "seed": "node src/seed.js",
+    "dev:full": "npm run seed && npm run dev"
   },
   "dependencies": {
-    "redis": "catalog:"
-  }
+    "express": "^5.1.0",
+    "redis": "catalog:",
+    "redis-om": "^0.4.6"
+  },
+  "version": "1.0.0",
+  "description": "UIT Course & Student Manager — Redis Stack demo (RedisJSON + RediSearch + Streams)",
+  "devDependencies": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module"
 }
