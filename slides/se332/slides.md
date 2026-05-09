@@ -31,6 +31,10 @@ hideInToc: true
 ---
 
 ---
+src: ./pages/advanced/slides.md
+---
+
+---
 src: ./pages/persistence/slides.md
 ---
 
