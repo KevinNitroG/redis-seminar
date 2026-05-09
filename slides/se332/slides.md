@@ -31,17 +31,69 @@ hideInToc: true
 ---
 
 ---
+<<<<<<< HEAD
 src: ./pages/advanced/slides.md
 ---
 
 ---
 src: ./pages/persistence/slides.md
+=======
+src: ./pages/syntax-basic/basic.md
+>>>>>>> 96ed26e (feat: add syntax)
 ---
 
 ---
-src: ./pages/ecosystem/slides.md
+layout: center
+class: text-center
+transition: slide-up
+---
+
+# Persistence, Durability & Transactions
+
+---
+src: ./pages/persistence/persistence.md
 ---
 
 ---
-src: ./pages/final/slides.md
+src: ./pages/persistence/transactions.md
+---
+
+---
+layout: center
+class: text-center
+transition: slide-up
+---
+
+# Ecosystem & Cloud Native
+
+---
+src: ./pages/ecosystem/kubernetes.md
+---
+
+---
+src: ./pages/ecosystem/alternatives.md
+---
+
+---
+layout: center
+class: text-center
+transition: slide-up
+---
+
+# Final Thoughts & Resources
+
+---
+src: ./pages/final/when-to-use.md
+---
+
+---
+src: ./pages/final/authentik.md
+---
+
+---
+src: ./pages/final/books.md
+---
+
+---
+src: ./pages/final/closing.md
 ---
