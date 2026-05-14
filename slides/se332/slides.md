@@ -31,7 +31,6 @@ hideInToc: true
 ---
 
 ---
-<<<<<<< HEAD
 src: ./pages/advanced/slides.md
 ---
 
@@ -39,7 +38,7 @@ src: ./pages/advanced/slides.md
 src: ./pages/persistence/slides.md
 =======
 src: ./pages/syntax-basic/basic.md
->>>>>>> 96ed26e (feat: add syntax)
+
 ---
 
 ---
