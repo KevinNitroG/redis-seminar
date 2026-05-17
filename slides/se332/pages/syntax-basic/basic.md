@@ -7,142 +7,144 @@ layout: center
 
 ---
 
-# Tổng quan về Cấu trúc lệnh Redis
-## "Tư duy theo Key-Value"
+# Overview of Redis Command Structure
+## "The Key-Value Mindset"
 
-- **Cấu trúc lệnh:** `COMMAND KEY [ARGUMENTS]`
-- **Quy ước đặt tên Key:** `object:id:field`
-- **Đặc điểm kỹ thuật:**
-  - **Flat Keyspace:** Không có cấu trúc bảng, truy cập trực tiếp qua Key.
-  - **Single-threaded:** Không lo lắng về vấn đề lock contention khi thao tác dữ liệu.
-- **Ví dụ:** `student:24521574:name`
+- **Command Structure:** `COMMAND KEY [ARGUMENTS]`
+- **Key Naming Convention:** `object:id:field`
+- **Technical Characteristics:**
+  - **Flat Keyspace:** No table structure, direct access via Key.
+  - **Single-threaded:** No need to worry about lock contention during data manipulation.
+- **Example:** `student:24521574:name`
 
 <img src="./public/synax-redis.tiff" class="w-200 h-48" />
+
 ---
 
-## 1. Strings (Kiểu dữ liệu cơ bản)
-Tối ưu để lưu trữ các giá trị đơn lẻ, cho phép ánh xạ từ một key sang một value
+## Strings (Basic Data Type)
+Optimized for storing single values, allowing you to map a key to a value.
 
 ```bash
-# Chỉ set nếu chưa tồn tại (NX)
+# Set only if it does not exist (NX)
 SET student:login:maipht "active" NX
 
-# Lưu thông tin sinh viên UIT cùng lúc (MSET)
-MSET student:24521574:name "Mai Phú Tân" student:24521574:gpa "6.5"
+# Store UIT student info simultaneously (MSET)
+MSET student:24521574:name "Mai Phu Tan" student:24521574:gpa "6.5"
 
-# Tăng giảm số lượng
+# Increment/Decrement values
 INCR student:24521574:views       
 INCRBY student:24521574:views 10   
 
-# Lấy giá trị của một key
+# Get the value of a key
 GET student:24521574:name         
 MGET student:24521574:name student:24521574:gpa 
 ```
 
 ---
 
-## 2. Hashes (Cấu trúc đối tượng)
-Lưu trữ các đối tượng có nhiều thuộc tính tức là một key có thể ánh xạ đến nhiều value
+## Hashes (Object Structure)
+Store objects with multiple attributes; a single key can map to multiple fields and values.
 
 ```bash
-# Tạo profile sinh viên dưới dạng một Hash duy nhất (HSET)
-HSET student:24521574 name "Mai Phú Tân" gpa 6.5 cohort "24"
+# Create a student profile as a single Hash (HSET)
+HSET student:24521574 name "Mai Phu Tan" gpa 6.5 cohort "24"
 
-# Lấy toàn bộ thông tin của sinh viên này
+# Get all information of this student
 HGETALL student:24521574
 
-# Cập nhật thông tin của sinh viên này
+# Update information for this student
 HSET student:24521574 gpa 7.0     
 
-# Lấy thông tin của sinh viên này
+# Get specific information of this student
 HGET student:24521574 name         
 
-# Thao tác số học
+# Arithmetic operation
 HINCRBYFLOAT student:24521574 gpa 0.5
 
-# Thao tác kiểm tra
+# Existence check
 HEXISTS student:24521574 cohort   
 
-# Thao tác xoá 
+# Delete operation 
 HDEL student:24521574 cohort
 ```
 
 ---
 
-## 3. Sets & Sorted Sets
-Quản lý danh sách không trùng lặp và có thứ tự.
+## Sets & Sorted Sets
+Manage unique and ordered lists of elements.
 
 ```bash
-# Thêm sinh viên vào lớp SE121 (Set)
+# Add students to class SE121 (Set)
 SADD course:SE121:students "23521476" "23520952"
 
-# Thêm sinh viên kèm GPA vào bảng vàng (ZSET)
+# Add students with GPA to the leaderboard (ZSET)
 ZADD leaderboard:gpa:K24 9.2 "23521476" 8.5 "24521574"
 
-# Kiểm tra và đếm các phần tử
+# Check and count elements
 SISMEMBER course:SE121:students "24521574" 
 SCARD course:SE121:students 
 
-# Truy vấn bảng xếp hạng
+# Query the leaderboard
 ZREVRANGE leaderboard:gpa:K24 0 2 WITHSCORES 
 ZRANK leaderboard:gpa:K24 "24521574"             
 ```
 
 ---
 
-## 4. Bitmaps (Tối ưu bộ nhớ)
-Dùng để điểm danh hoặc theo dõi trạng thái.
+## Bitmaps (Memory Optimization)
+Used for attendance tracking or state monitoring.
 
 ```bash
-# Điểm danh môn SE332 ngày 01/03/2026
-# Tân (ID 0): Có mặt (1)
+# Attendance for SE332 on March 1st, 2026
+# Tan (ID 0): Present (1)
 SETBIT attend:SE332:2026-03-01 0 1
 
-# Đếm tổng số sinh viên đi học hôm nay
+# Count total students attending today
 BITCOUNT attend:SE332:2026-03-01
 
-# Kiểm tra tồn tại
-GETBIT attend:SE332:2026-03-01 0   # Trả về 1 (Tân đã điểm danh)
+# Check existence
+GETBIT attend:SE332:2026-03-01 0   # Returns 1 (Tan is present)
 
-# Phép toán logic
-BITOP AND attend:full:both_days attend:SE332:03-01 attend:SE332:03-02 # Tân đã đi học trong ngày 1 và ngày 2
+# Logical operations
+BITOP AND attend:full:both_days attend:SE332:03-01 attend:SE332:03-02 # Tan attended on both day 1 and day 2
 ```
 
 ---
 
-## 5. So sánh với SQL (Trực quan hóa)
-Sự khác biệt giữa truy vấn quan hệ và truy vấn Key-Value.
+## Comparison with SQL (Visualization)
+The difference between relational queries and Key-Value queries.
 
-
-
-| Đặc điểm | SQL (MySQL/PostgreSQL) | Redis |
+| Feature | SQL (MySQL/PostgreSQL) | Redis |
 | :--- | :--- | :--- |
-| **Mô hình** | Bảng (Rows & Columns) | Key-Value, Data Structures |
-| **Schema** | Cố định (Strong Schema) | Linh hoạt (Schema-less) |
-| **Lưu trữ** | Ổ đĩa (Disk-based) | Bộ nhớ tạm (In-memory) |
-| **Tốc độ** | Miliseconds (vài ms) | Sub-millisecond (< 1ms) |
-| **Truy vấn** | Ngôn ngữ SQL phức tạp | Lệnh nguyên tử (Atomic Commands) |
+| **Data Model** | Tables (Rows & Columns) | Key-Value, Data Structures |
+| **Schema** | Fixed (Strong Schema) | Flexible (Schema-less) |
+| **Storage** | Disk (Disk-based) | Memory (In-memory) |
+| **Speed** | Milliseconds (a few ms) | Sub-millisecond (< 1ms) |
+| **Querying** | Complex SQL language | Atomic Commands |
 
 ---
+hideInToc: true
+---
 
-## 5. So sánh với SQL (Ví dụ cụ thể)
-Cách chuyển đổi tư duy từ bảng sang Key-Value.
+## Comparison with SQL (Concrete Example)
+How to shift mindset from tables to Key-Value.
 
-**Bài toán: Cập nhật GPA sinh viên**
+**Problem: Update student GPA**
 
-- **SQL:** Phải tìm dòng, khóa bảng (lock), ghi xuống đĩa.
+- **SQL:** Must find the row, acquire lock, write to disk.
   ```sql
   UPDATE students SET gpa = gpa + 0.5 WHERE id = '24521574';
+  ```
 - **Hash Update (Atomic)**
-```
-   HINCRBYFLOAT student:24521574 gpa 0.5;
+  ```bash
+  HINCRBYFLOAT student:24521574 gpa 0.5
+  ```
 
 ---
 
-## Tại sao chọn Redis cho "Primary Database"?
+## Why choose Redis as a "Primary Database"?
 
-- **Atomic Operations:** Đảm bảo tính nhất quán dữ liệu mà không cần cơ chế khóa phức tạp.
-- **Rich Data Structures:** Hash, Set, ZSet, Bitmap cung cấp các phép toán tối ưu mà SQL khó thực hiện hiệu quả.
-- **Tối ưu chi phí:** Lưu trữ hàng triệu trạng thái (ví dụ: điểm danh) chỉ với vài MB nhờ Bitmaps.
-- **Scalability:** Dễ dàng mở rộng và chịu tải cực lớn cho các hệ thống như Đăng ký môn học.
-
+- **Atomic Operations:** Ensure data consistency without complex locking mechanisms.
+- **Rich Data Structures:** Hash, Set, ZSet, and Bitmap provide highly optimized operations that are difficult to execute efficiently in SQL.
+- **Cost Optimization:** Store millions of states (e.g., attendance) in just a few MBs using Bitmaps.
+- **Scalability:** Easily scalable and capable of handling massive loads for systems like Course Registration.
