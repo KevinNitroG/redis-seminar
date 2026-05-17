@@ -5,6 +5,7 @@
       "{projectRoot}/slides.md",
       "{projectRoot}/index.html",
       "{projectRoot}/components/**/*",
+      "{projectRoot}/pages/**/*",
       "{projectRoot}/layouts/**/*",
       "{projectRoot}/public/**/*",
       "{projectRoot}/setup/**/*",
