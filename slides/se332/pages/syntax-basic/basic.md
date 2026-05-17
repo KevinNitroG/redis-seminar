@@ -2,12 +2,13 @@
 layout: center
 ---
 
-# Redis as a Primary Database
 ## Section 2: Core Data Types & Commands
 
 ---
+hideInToc: true
+---
 
-# Overview of Redis Command Structure
+
 ## "The Key-Value Mindset"
 
 - **Command Structure:** `COMMAND KEY [ARGUMENTS]`
