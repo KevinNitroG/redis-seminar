@@ -33,11 +33,6 @@ maxLevel: 1
 ---
 
 ---
-layout: table-of-contents
-hideInToc: true
----
-
----
 src: ./pages/syntax-basic/slides.md
 ---
 
