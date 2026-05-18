@@ -43,5 +43,14 @@ Detailed internals, persistence, clustering
 </div>
 
 <!--
-These three books cover Redis from beginner to advanced. redis.io/docs is the definitive reference.
+Ba cuốn sách gợi ý, đi từ cơ bản đến nâng cao:
+
+1. Redis in Action (Josiah Carlson) — patterns thực tế để xây dựng ứng dụng Redis.
+2. Redis Essentials (Maxwell Dayvson Da Silva) — kiến thức nền tảng, cấu trúc dữ liệu.
+3. Redis Deep Dive — internals chi tiết, persistence, clustering.
+
+Bên cạnh sách, các tài nguyên online:
+- redis.io/docs — tài liệu tham khảo chính thức, đầy đủ nhất.
+- try.redis.io — dùng thử Redis trực tiếp trên browser.
+- university.redis.io — khóa học chính thức từ Redis.
 -->

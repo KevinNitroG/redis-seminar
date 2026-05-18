@@ -6,7 +6,3 @@ transition: slide-up
 ---
 
 # Thank You
-
-<!--
-Open for questions.
--->

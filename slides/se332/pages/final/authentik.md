@@ -10,7 +10,7 @@ hideInToc: true
 
 **Before (Pre-2025.10)**
 
-```mermaid
+```mermaid {scale: 0.7}
 graph TD
   U1([User / Browser]) --> R1[Authentik Server <br> Router & Core]
   R1 <--> DB1[(PostgreSQL <br> Config & Data)]
@@ -25,7 +25,7 @@ graph TD
 
 **After (2025.10+)**
 
-```mermaid
+```mermaid {scale: 0.7}
 graph TD
   U2([User / Browser]) --> R2[Authentik Server <br> Router & Core]
   R2 <--> DB2[(PostgreSQL <br> Config, Data, Cache, <br> Sessions, WebSockets, Tasks)]
@@ -43,6 +43,14 @@ graph TD
 </div>
 
 <!--
-Authentik (open-source identity provider) removed Redis in favor of using PostgreSQL alone to reduce operational complexity.
-The lesson: don't add infrastructure you don't need. Redis is powerful, but only when the use case warrants it.
+Authentik là một open-source identity provider (SSO/OAuth2).
+Trước phiên bản 2025.10, Authentik dùng Redis cho cache, session, WebSocket.
+Sau đó họ loại bỏ Redis hoàn toàn, chuyển hết sang PostgreSQL.
+
+Tại sao? Redis làm tăng độ phức tạp vận hành:
+phải quản lý thêm một service, cấu hình persistence, memory limits, v.v.
+Với use case của Authentik, PostgreSQL đáp ứng đủ — không cần Redis.
+
+Bài học: đừng thêm infrastructure nếu không thực sự cần.
+Redis rất mạnh, nhưng chỉ nên dùng khi performance gain xứng đáng với chi phí vận hành.
 -->
