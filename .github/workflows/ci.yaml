@@ -47,7 +47,6 @@ jobs:
           cache: pnpm
 
       - name: Derive SHAs for Nx Affected
-        if: ${{ github.event.inputs.forceNxRun == 'false' }}
         uses: nrwl/nx-set-shas@v4
 
       - name: Install Node Dependencies
