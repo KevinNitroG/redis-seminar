@@ -4,7 +4,8 @@
     "nx": "22.5.4",
     "nx-github-pages": "^1.2.0",
     "prettier": "catalog:",
-    "prettier-plugin-slidev": "catalog:"
+    "prettier-plugin-slidev": "catalog:",
+    "playwright-chromium": "catalog:slidev"
   },
   "packageManager": "pnpm@10.28.2",
   "devEngines": {
