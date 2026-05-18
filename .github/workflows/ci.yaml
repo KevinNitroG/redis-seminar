@@ -54,7 +54,7 @@ jobs:
         run: pnpm install
 
       - name: Playwright Install
-        run: npx playwright install chromium --with-deps
+        run: pnpm exec playwright install --with-deps
 
       - name: Setup Git User
         run: |
