@@ -8,7 +8,6 @@ layout: center
 hideInToc: true
 ---
 
-
 ## "The Key-Value Mindset"
 
 - **Command Structure:** `COMMAND KEY [ARGUMENTS]`
@@ -18,11 +17,12 @@ hideInToc: true
   - **Single-threaded:** No need to worry about lock contention during data manipulation.
 - **Example:** `student:24521574:name`
 
-<img src="./public/synax-redis.tiff" class="w-200 h-48" />
+<img src="/syntax-redis.jpeg" class="w-200 h-48" />
 
 ---
 
 ## Strings (Basic Data Type)
+
 Optimized for storing single values, allowing you to map a key to a value.
 
 ```bash
@@ -33,17 +33,18 @@ SET student:login:maipht "active" NX
 MSET student:24521574:name "Mai Phu Tan" student:24521574:gpa "6.5"
 
 # Increment/Decrement values
-INCR student:24521574:views       
-INCRBY student:24521574:views 10   
+INCR student:24521574:views
+INCRBY student:24521574:views 10
 
 # Get the value of a key
-GET student:24521574:name         
-MGET student:24521574:name student:24521574:gpa 
+GET student:24521574:name
+MGET student:24521574:name student:24521574:gpa
 ```
 
 ---
 
 ## Hashes (Object Structure)
+
 Store objects with multiple attributes; a single key can map to multiple fields and values.
 
 ```bash
@@ -54,24 +55,25 @@ HSET student:24521574 name "Mai Phu Tan" gpa 6.5 cohort "24"
 HGETALL student:24521574
 
 # Update information for this student
-HSET student:24521574 gpa 7.0     
+HSET student:24521574 gpa 7.0
 
 # Get specific information of this student
-HGET student:24521574 name         
+HGET student:24521574 name
 
 # Arithmetic operation
 HINCRBYFLOAT student:24521574 gpa 0.5
 
 # Existence check
-HEXISTS student:24521574 cohort   
+HEXISTS student:24521574 cohort
 
-# Delete operation 
+# Delete operation
 HDEL student:24521574 cohort
 ```
 
 ---
 
 ## Sets & Sorted Sets
+
 Manage unique and ordered lists of elements.
 
 ```bash
@@ -82,17 +84,18 @@ SADD course:SE121:students "23521476" "23520952"
 ZADD leaderboard:gpa:K24 9.2 "23521476" 8.5 "24521574"
 
 # Check and count elements
-SISMEMBER course:SE121:students "24521574" 
-SCARD course:SE121:students 
+SISMEMBER course:SE121:students "24521574"
+SCARD course:SE121:students
 
 # Query the leaderboard
-ZREVRANGE leaderboard:gpa:K24 0 2 WITHSCORES 
-ZRANK leaderboard:gpa:K24 "24521574"             
+ZREVRANGE leaderboard:gpa:K24 0 2 WITHSCORES
+ZRANK leaderboard:gpa:K24 "24521574"
 ```
 
 ---
 
 ## Bitmaps (Memory Optimization)
+
 Used for attendance tracking or state monitoring.
 
 ```bash
@@ -104,7 +107,7 @@ SETBIT attend:SE332:2026-03-01 0 1
 BITCOUNT attend:SE332:2026-03-01
 
 # Check existence
-GETBIT attend:SE332:2026-03-01 0   # Returns 1 (Tan is present)
+GETBIT attend:SE332:2026-03-01 0 # Returns 1 (Tan is present)
 
 # Logical operations
 BITOP AND attend:full:both_days attend:SE332:03-01 attend:SE332:03-02 # Tan attended on both day 1 and day 2
@@ -113,21 +116,23 @@ BITOP AND attend:full:both_days attend:SE332:03-01 attend:SE332:03-02 # Tan atte
 ---
 
 ## Comparison with SQL (Visualization)
+
 The difference between relational queries and Key-Value queries.
 
-| Feature | SQL (MySQL/PostgreSQL) | Redis |
-| :--- | :--- | :--- |
+| Feature        | SQL (MySQL/PostgreSQL)  | Redis                      |
+| :------------- | :---------------------- | :------------------------- |
 | **Data Model** | Tables (Rows & Columns) | Key-Value, Data Structures |
-| **Schema** | Fixed (Strong Schema) | Flexible (Schema-less) |
-| **Storage** | Disk (Disk-based) | Memory (In-memory) |
-| **Speed** | Milliseconds (a few ms) | Sub-millisecond (< 1ms) |
-| **Querying** | Complex SQL language | Atomic Commands |
+| **Schema**     | Fixed (Strong Schema)   | Flexible (Schema-less)     |
+| **Storage**    | Disk (Disk-based)       | Memory (In-memory)         |
+| **Speed**      | Milliseconds (a few ms) | Sub-millisecond (< 1ms)    |
+| **Querying**   | Complex SQL language    | Atomic Commands            |
 
 ---
 hideInToc: true
 ---
 
 ## Comparison with SQL (Concrete Example)
+
 How to shift mindset from tables to Key-Value.
 
 **Problem: Update student GPA**
