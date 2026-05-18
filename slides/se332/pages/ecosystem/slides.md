@@ -4,7 +4,11 @@ class: text-center
 transition: slide-up
 ---
 
-# Ecosystem & Cloud Native
+# Deploy & Ecosystem & Cloud Native
+
+---
+src: ./deploy-scale.md
+---
 
 ---
 src: ./kubernetes.md

@@ -43,20 +43,17 @@ OT Container Kit is recommended for open-source deployments — active, supports
 -->
 
 ---
-hideInToc: true
-layout: two-cols
-layoutClass: gap-6
+layout: figure
+figureUrl: https://ot-container-kit.github.io/redis-operator/assets/img/redis-operator-architecture.ae3c73c9.png
+figureCaption: 'OT Container Kit Architecture - CRDs and Controller'
 ---
 
-## OT Container Kit Architecture
+## OT Container Kit Architecture - CRDs and Controller
 
-![Redis Operator Architecture](https://ot-container-kit.github.io/redis-operator/assets/img/redis-operator-architecture.ae3c73c9.png)
+---
+layout: figure
+figureUrl: https://ot-container-kit.github.io/redis-operator/assets/img/redis-cluster-setup.c1d7206d.png
+figureCaption: 'OT Container Kit Architecture - Cluster Setup'
+---
 
-::right::
-
-![Redis Cluster Setup](https://ot-container-kit.github.io/redis-operator/assets/img/redis-cluster-setup.c1d7206d.png)
-
-<!--
-Left: the operator architecture — CRDs managed by the operator controller.
-Right: cluster setup with master-replica sharding across nodes.
--->
+## OT Container Kit Architecture - Cluster Setup
