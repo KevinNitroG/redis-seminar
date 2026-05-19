@@ -37,7 +37,7 @@ Optimistic locking. If watched key changes before `EXEC`, transaction aborts.
 </div>
 
 <!--
-Transcript (Vietnamese): BASE model — Redis tuân thủ BASE thay vì ACID.
+Redis tuân thủ BASE thay vì ACID.
 
 - Basically Available: Redis luôn sẵn sàng phản hồi ngay cả khi một phần node gặp sự cố.
 - Soft state: Trạng thái hệ thống có thể thay đổi theo thời gian (TTL, eviction - thu hồi, replication lag).
@@ -61,8 +61,8 @@ hideInToc: true
 
 <!--
 Đây là kịch bản lý tưởng:
-- Sinh viên A WATCHes `seats` (1 chỗ còn)
-- Sinh viên A MULTI, DECR `seats` → 0, SADD "A" → EXEC thành công
+- Sinh viên WATCHes `seats` (1 chỗ còn)
+- Sinh viên MULTI, DECR `seats` → 0, SADD "A" → EXEC thành công
 -->
 
 ---

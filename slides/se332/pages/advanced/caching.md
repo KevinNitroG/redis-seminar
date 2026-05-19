@@ -31,8 +31,14 @@ Cache sits in front of DB; cache handles misses automatically.
 <div class="text-xs text-gray-400 mt-2">Source: <a href="https://viblo.asia/p/su-dung-redis-lam-cache-de-tang-toc-do-truy-van-GrLZD0dwZk0">Viblo — Sử dụng Redis làm cache để tăng tốc độ truy vấn</a></div>
 
 <!--
-- Cache-aside: most common; app controls caching logic; stale data possible
-- Read-through: cleaner app code; cache library manages DB fetch
+Cache-Aside (còn gọi là Lazy Loading):
+- App kiểm tra cache trước. Nếu có (cache hit) → trả về ngay.
+- Nếu không có (cache miss) → app tự query DB, ghi kết quả vào cache cho lần sau.
+- Ưu: app kiểm soát hoàn toàn logic caching.
+- Nhược: dữ liệu có thể bị stale nếu DB thay đổi mà cache chưa update.
+
+Read-Through:
+- Giống Cache-Aside, nhưng việc load DB khi cache miss do thư viện/ provider cache xử lý, app không cần tự viết.
 -->
 
 ---
@@ -68,7 +74,15 @@ Write to cache first; DB is updated asynchronously. Fastest writes, risk of data
 <div class="text-xs text-gray-400 mt-2">Source: <a href="https://viblo.asia/p/su-dung-redis-lam-cache-de-tang-toc-do-truy-van-GrLZD0dwZk0">Viblo — Sử dụng Redis làm cache để tăng tốc độ truy vấn</a></div>
 
 <!--
-- Write-through: consistent but adds write latency
-- Write-back: best throughput; async flush risks data loss on crash
-- Choose based on: read/write ratio, consistency requirements, tolerance for data loss
+Write-Through:
+- Ghi đồng thời vào cache và DB, synchronous.
+- Luôn nhất quán (consistent), nhưng độ trễ ghi bằng tổng thời gian ghi cache + DB.
+- Phù hợp hệ thống cần consistency cao.
+
+Write-Back (Write-Behind):
+- Ghi vào cache trước, DB update sau (asynchronous).
+- Tốc độ ghi nhanh nhất, nhưng rủi ro mất dữ liệu nếu crash trước khi flush xuống DB.
+- Phù hợp ứng dụng nặng về ghi, có thể chấp nhận rủi ro.
+
+Chọn chiến thuật nào? Dựa vào: tỉ lệ đọc/ghi, yêu cầu consistency, khả năng chấp nhận mất dữ liệu.
 -->
