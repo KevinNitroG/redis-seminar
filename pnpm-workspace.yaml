@@ -3,6 +3,11 @@ packages:
   - demo/*
   - slides/*
 
+allowBuilds:
+  esbuild: false
+  nx: false
+  playwright-chromium: false
+
 catalog:
   prettier: 3.8.1
   prettier-plugin-slidev: 1.0.5

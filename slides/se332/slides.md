@@ -28,6 +28,16 @@ exportFilename: redis-se332
 ---
 layout: table-of-contents
 hideInToc: true
+level: 1
+maxLevel: 1
+---
+
+---
+src: ./pages/syntax-basic/slides.md
+---
+
+---
+src: ./pages/advanced/slides.md
 ---
 
 ---

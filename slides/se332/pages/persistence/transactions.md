@@ -37,8 +37,18 @@ Optimistic locking. If watched key changes before `EXEC`, transaction aborts.
 </div>
 
 <!--
-Redis transactions are atomic but not fully ACID.
-WATCH enables optimistic concurrency control — useful for seat reservation scenarios.
+Redis tuân thủ BASE thay vì ACID.
+
+- Basically Available: Redis luôn sẵn sàng phản hồi ngay cả khi một phần node gặp sự cố.
+- Soft state: Trạng thái hệ thống có thể thay đổi theo thời gian (TTL, eviction - thu hồi, replication lag).
+- Eventually consistent: Trong môi trường cluster, dữ liệu cuối cùng sẽ đồng bộ — không đảm bảo consistent ngay lập tức.
+
+Vì vậy, transaction của Redis là atomic nhưng không fully ACID.
+WATCH đóng vai trò optimistic locking (lạc quan) — giống như check-in trước khi commit.
+
+Optimistic lock được hiểu là cho phép nhiều client cùng làm việc trên một key,
+nhưng khi commit sẽ kiểm tra xem có ai thay đổi key đó không.
+Nếu có, transaction sẽ bị abort để tránh xung đột dữ liệu.
 -->
 
 ---
@@ -50,7 +60,9 @@ hideInToc: true
 <<< @/snippets/transaction-success sh {1-2|1-5|1-8|1-11|1-15}
 
 <!--
-Walk through the happy path: WATCH the seat count, queue DECR + SADD, EXEC completes successfully.
+Đây là kịch bản lý tưởng:
+- Sinh viên WATCHes `seats` (1 chỗ còn)
+- Sinh viên MULTI, DECR `seats` → 0, SADD "A" → EXEC thành công
 -->
 
 ---
@@ -62,8 +74,7 @@ hideInToc: true
 <<< @/snippets/transaction-fail sh {1-2|1-5|1-9|1-12|1-15}
 
 <!--
-Another client sneaks in a DECR between our WATCH and EXEC.
-WATCH detects the change and EXEC returns nil — transaction aborted safely.
+Đây là kịch bản xung đột
 -->
 
 ---
@@ -88,6 +99,6 @@ hideInToc: true
 </div>
 
 <!--
-This table shows exactly why WATCH is critical for concurrent seat reservation.
-Without WATCH, both students could successfully enroll even with seats=1.
+Bảng thời gian này minh họa rõ ràng cách WATCH phát hiện xung đột và ngăn chặn double booking.
+Nếu không có WATCH, cả hai sinh viên đều có thể thành công dù chỉ còn 1 chỗ.
 -->

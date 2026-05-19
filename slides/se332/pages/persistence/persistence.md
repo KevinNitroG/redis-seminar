@@ -38,7 +38,10 @@ hideInToc: true
 </div>
 
 <!--
-RDB is like a database backup — fast to load but may lose recent writes.
-AOF is like a write-ahead log — more durable but slower and larger.
-Together they cover each other's weaknesses.
+RDB - Redis Database Backup, là dạng snapshot, lưu trữ toàn bộ dữ liệu tại một thời điểm nhất định.
+Dữ liệu sẽ bị mất nếu Redis bị crash giữa các lần snapshot, nhưng khởi động lại rất nhanh.
+
+AOF - giống write-ahead log — ghi lại tất cả các lệnh ghi vào file, có thể cấu hình để ghi ngay lập tức hoặc mỗi giây. AOF có thể lớn hơn RDB và khởi động chậm hơn, nhưng giảm thiểu mất dữ liệu.
+
+Nên kết hợp cả hai: RDB để khởi động nhanh, AOF để đảm bảo dữ liệu không bị mất.
 -->

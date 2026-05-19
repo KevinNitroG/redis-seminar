@@ -38,25 +38,27 @@ hideInToc: true
 </div>
 
 <!--
-Three main options for running Redis on Kubernetes.
-OT Container Kit is recommended for open-source deployments — active, supports auto TLS and scaling.
+Có 3 lựa chọn phổ biến để chạy Redis trên Kubernetes:
+1. Redis Enterprise Operator — của chính Redis Ltd., đầy đủ tính năng nhưng không free, cần commercial license.
+2. Bitnami Helm Chart — dễ cài, phù hợp bắt đầu. Tuy nhiên không còn được maintain, không khuyến khích dùng cho production.
+3. OT Container Kit — open source operator từ cộng đồng. Hỗ trợ auto TLS, horizontal scaling, cả standalone và cluster modes. Là lựa chọn miễn phí tốt nhất hiện tại.
+Tuỳ nhu cầu: Enterprise nếu có budget, OT Container Kit nếu muốn open source và tự vận hành.
 -->
 
 ---
-hideInToc: true
-layout: two-cols
-layoutClass: gap-6
+
+layout: figure
+figureUrl: https://ot-container-kit.github.io/redis-operator/assets/img/redis-operator-architecture.ae3c73c9.png
+figureCaption: 'OT Container Kit Architecture - CRDs and Controller'
+
 ---
 
-## OT Container Kit Architecture
+## OT Container Kit Architecture - CRDs and Controller
 
-![Redis Operator Architecture](https://ot-container-kit.github.io/redis-operator/assets/img/redis-operator-architecture.ae3c73c9.png)
+---
+layout: figure
+figureUrl: https://ot-container-kit.github.io/redis-operator/assets/img/redis-cluster-setup.c1d7206d.png
+figureCaption: 'OT Container Kit Architecture - Cluster Setup'
+---
 
-::right::
-
-![Redis Cluster Setup](https://ot-container-kit.github.io/redis-operator/assets/img/redis-cluster-setup.c1d7206d.png)
-
-<!--
-Left: the operator architecture — CRDs managed by the operator controller.
-Right: cluster setup with master-replica sharding across nodes.
--->
+## OT Container Kit Architecture - Cluster Setup
