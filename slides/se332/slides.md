@@ -32,6 +32,8 @@ level: 1
 maxLevel: 1
 ---
 
+# Table of Contents
+
 ---
 src: ./pages/syntax-basic/slides.md
 ---

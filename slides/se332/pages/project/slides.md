@@ -4,9 +4,9 @@ class: text-center
 transition: slide-up
 ---
 
-# Section 6
+# Section 6: Real Project Demo
 
-## Real Project Demo
+## UIT Course Manager
 
 <!--
 - Mở đầu phần demo: chuyển từ lý thuyết RedisJSON, RediSearch, Streams sang một app nhỏ có đủ CRUD, search, login/session và enrollment.
@@ -15,6 +15,10 @@ transition: slide-up
 
 ---
 src: ./architecture.md
+---
+
+---
+src: ./overview.md
 ---
 
 ---
