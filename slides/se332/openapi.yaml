@@ -5,11 +5,88 @@ info:
   version: 1.0.0
   description: Comprehensive CRUD API powered by Redis Stack (RedisJSON + RediSearch)
 tags:
+  - name: auth
+    description: Demo login, Redis session, and profile endpoints
   - name: student
     description: Student management endpoints
   - name: course
     description: Course management endpoints
 paths:
+  /auth/login:
+    post:
+      summary: Login and create Redis session (SET EX)
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLogin'
+      responses:
+        201:
+          description: Login succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        401:
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/logout:
+    post:
+      summary: Logout and delete Redis session (DEL)
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      responses:
+        204:
+          description: Session deleted
+  /auth/me:
+    get:
+      summary: Read current profile from Redis session
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Current profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        401:
+          description: Missing or expired session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      summary: Update current profile (JSON.SET)
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdate'
+      responses:
+        200:
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        401:
+          description: Missing or expired session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /students:
     post:
       summary: Create a new student (JSON.SET)
@@ -442,7 +519,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: UUID
   schemas:
+    AuthLogin:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: thiendp
+        password:
+          type: string
+          example: thiendp
+    AuthSession:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Bearer token returned by login
+        sessionKey:
+          type: string
+          description: Redis key that stores the session
+          example: session:9f3c4e1d-7e75-42c4-b1b8-8f8a0b6d06fd
+        expiresIn:
+          type: integer
+          example: 3600
+        user:
+          $ref: '#/components/schemas/Student'
+    ProfileUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+        name:
+          type: string
+        cohort:
+          type: string
+        gpa:
+          type: number
     Student:
       type: object
       properties:

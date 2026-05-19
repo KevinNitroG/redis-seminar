@@ -32,6 +32,8 @@ level: 1
 maxLevel: 1
 ---
 
+# Table of Contents
+
 ---
 src: ./pages/syntax-basic/slides.md
 ---
@@ -46,6 +48,10 @@ src: ./pages/persistence/slides.md
 
 ---
 src: ./pages/ecosystem/slides.md
+---
+
+---
+src: ./pages/project/slides.md
 ---
 
 ---
