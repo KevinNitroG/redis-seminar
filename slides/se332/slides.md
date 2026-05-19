@@ -39,5 +39,9 @@ src: ./pages/ecosystem/slides.md
 ---
 
 ---
+src: ./pages/project/slides.md
+---
+
+---
 src: ./pages/final/slides.md
 ---

@@ -18,6 +18,7 @@ export const studentSchema = new Schema('Student', {
   // Student ID (e.g., "23521476") — stored as the entity ID
   studentId: { type: 'string', field: '$.studentId' },
   username:  { type: 'text',   field: '$.username' },   // TEXT → full-text searchable
+  password:  { type: 'string', field: '$.password' },
   name:      { type: 'text',   field: '$.name' },       // TEXT → full-text searchable
   cohort:    { type: 'string', field: '$.cohort' },     // TAG-like exact match via string
   gpa:       { type: 'number', field: '$.gpa', sortable: true },

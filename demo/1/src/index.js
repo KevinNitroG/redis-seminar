@@ -11,6 +11,7 @@
 import express from 'express';
 import { connectRedis } from './db.js';
 import { createIndexes } from './repositories.js';
+import authRoutes from './routes/auth.js';
 import studentRoutes from './routes/students.js';
 import courseRoutes from './routes/courses.js';
 
@@ -25,12 +26,13 @@ app.use(express.static('public'));
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
 
 // ─── API Routes ─────────────────────────────────────────────────────────────
+app.use('/auth', authRoutes);
 app.use('/students', studentRoutes);
 app.use('/courses', courseRoutes);
 
@@ -47,6 +49,9 @@ async function start() {
     app.listen(PORT, () => {
       console.log(`🚀 Server running at http://localhost:${PORT}`);
       console.log(`📊 API endpoints:`);
+      console.log(`   POST              /auth/login`);
+      console.log(`   POST              /auth/logout`);
+      console.log(`   GET/PATCH         /auth/me`);
       console.log(`   GET/POST          /students`);
       console.log(`   GET/PATCH/PUT/DEL /students/:id`);
       console.log(`   GET               /students/search?query=...`);

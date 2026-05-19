@@ -14,6 +14,7 @@
 
 import { Router } from 'express';
 import { studentRepo } from '../repositories.js';
+import { client } from '../db.js';
 import { EntityId } from 'redis-om';
 
 const router = Router();
@@ -21,7 +22,7 @@ const router = Router();
 // ─── POST /students ─────────────────────────────────────────────────────────
 router.post('/', async (req, res) => {
   try {
-    const { id, username, name, cohort, gpa } = req.body;
+    const { id, username, name, cohort, gpa, password } = req.body;
 
     if (!id || !username || !name || !cohort || gpa === undefined) {
       return res.status(400).json({
@@ -42,6 +43,7 @@ router.post('/', async (req, res) => {
     const student = await studentRepo.save(id, {
       studentId: id,
       username,
+      password: password || username,
       name,
       cohort,
       gpa: parseFloat(gpa),
@@ -84,44 +86,42 @@ router.get('/search', async (req, res) => {
   try {
     const { query, cohort, minGpa, maxGpa, sortBy = 'gpa', order = 'desc' } = req.query;
 
-    let search = studentRepo.search();
+    const clauses = [];
 
-    // Full-text search on name and username
     if (query) {
-      // Clean query and split into words for better RediSearch handling
-      const words = query.trim().split(/\s+/).filter(w => w.length > 0);
+      const words = tokenizeSearch(query);
       if (words.length > 0) {
-        const preparedQuery = words.map(w => `${w}*`).join(' ');
-        search = search.where('name').matches(preparedQuery)
-          .or('username').matches(preparedQuery);
+        clauses.push(words.map(word => {
+          const fuzzy = word.length >= 3 ? `|@name:%${word}%|@username:%${word}%` : '';
+          return `(@name:${word}*|@username:${word}*${fuzzy})`;
+        }).join(' '));
       }
     }
 
-    // Filter by cohort (exact match)
     if (cohort) {
-      search = search.where('cohort').equals(cohort);
+      clauses.push(`@cohort:{${escapeTag(cohort)}}`);
     }
 
-    // GPA range filter
     if (minGpa !== undefined && maxGpa !== undefined) {
-      search = search.where('gpa').between(parseFloat(minGpa), parseFloat(maxGpa));
+      clauses.push(`@gpa:[${parseFloat(minGpa)} ${parseFloat(maxGpa)}]`);
     } else if (minGpa !== undefined) {
-      search = search.where('gpa').gte(parseFloat(minGpa));
+      clauses.push(`@gpa:[${parseFloat(minGpa)} +inf]`);
     } else if (maxGpa !== undefined) {
-      search = search.where('gpa').lte(parseFloat(maxGpa));
+      clauses.push(`@gpa:[-inf ${parseFloat(maxGpa)}]`);
     }
 
-    // Sorting
+    const rediSearchQuery = clauses.length ? clauses.join(' ') : '*';
     const sortField = ['gpa', 'name', 'cohort'].includes(sortBy) ? sortBy : 'gpa';
     const sortOrder = order === 'asc' ? 'ASC' : 'DESC';
-    search = search.sortBy(sortField, sortOrder);
-
-    const total = await search.return.count();
-    const students = await search.return.all();
+    const result = await client.ft.search('Student:index', rediSearchQuery, {
+      SORTBY: { BY: sortField, DIRECTION: sortOrder },
+      LIMIT: { from: 0, size: 100 },
+    });
+    const students = result.documents.map(doc => doc.value);
 
     res.json({
       data: students.map(formatStudent),
-      total,
+      total: result.total,
       query: query || '',
     });
   } catch (err) {
@@ -159,8 +159,9 @@ router.patch('/:id', async (req, res) => {
     }
 
     // Merge updates
-    const { username, name, cohort, gpa } = req.body;
+    const { username, name, cohort, gpa, password } = req.body;
     if (username !== undefined) student.username = username;
+    if (password !== undefined) student.password = password;
     if (name !== undefined) student.name = name;
     if (cohort !== undefined) student.cohort = cohort;
     if (gpa !== undefined) student.gpa = parseFloat(gpa);
@@ -184,10 +185,11 @@ router.put('/:id', async (req, res) => {
       });
     }
 
-    const { id, username, name, cohort, gpa } = req.body;
+    const { id, username, name, cohort, gpa, password } = req.body;
     const student = await studentRepo.save(req.params.id, {
       studentId: req.params.id,
       username,
+      password: password || existing.password || username,
       name,
       cohort,
       gpa: parseFloat(gpa),
@@ -221,6 +223,18 @@ router.delete('/:id', async (req, res) => {
 });
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
+function tokenizeSearch(value) {
+  return String(value)
+    .trim()
+    .split(/\s+/)
+    .map(word => word.replace(/[^\p{L}\p{N}_-]/gu, ''))
+    .filter(Boolean);
+}
+
+function escapeTag(value) {
+  return String(value).replace(/[{}|,\\]/g, '\\$&');
+}
+
 function formatStudent(student) {
   return {
     id: student[EntityId] || student.studentId,

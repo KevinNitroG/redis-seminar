@@ -1,9 +1,16 @@
 const API = '';
+let authToken = localStorage.getItem('redis-demo-token') || '';
+let currentSession = null;
 
 // ─── Utility ──────────────────────────────────────────────────────────────
 async function api(path, opts = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+    ...(opts.headers || {}),
+  };
   const res = await fetch(API + path, {
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     ...opts,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
@@ -26,16 +33,149 @@ function closeModal(id) { document.getElementById(id).classList.remove('show'); 
 window.closeModal = closeModal;
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.tab-btn[data-tab="${tab}"]`)?.classList.add('active');
+  document.getElementById('panel-' + tab)?.classList.add('active');
+}
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
-  });
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 
 // ─── GPA helpers ──────────────────────────────────────────────────────────
+// Auth / Profile
+const authGuest = document.getElementById('auth-guest');
+const authUser = document.getElementById('auth-user');
+const profileGuest = document.getElementById('profile-guest');
+const profileAuthenticated = document.getElementById('profile-authenticated');
+
+function initials(name = '') {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'U';
+}
+
+function setAuthUi(session) {
+  currentSession = session;
+  const user = session.user;
+
+  authGuest.classList.add('hidden');
+  authUser.classList.remove('hidden');
+  profileGuest.classList.add('hidden');
+  profileAuthenticated.classList.remove('hidden');
+
+  document.getElementById('auth-avatar').textContent = initials(user.name);
+  document.getElementById('auth-name').textContent = user.name;
+  document.getElementById('auth-username').textContent = `@${user.username}`;
+
+  document.getElementById('profile-avatar').textContent = initials(user.name);
+  document.getElementById('profile-name').textContent = user.name;
+  document.getElementById('profile-subtitle').textContent = `@${user.username} · MSSV: ${user.id}`;
+  document.getElementById('profile-cohort').textContent = `K${user.cohort}`;
+  document.getElementById('profile-gpa').textContent = Number(user.gpa || 0).toFixed(1);
+  document.getElementById('profile-enrollment-count').textContent = (user.enrollments || []).length;
+  document.getElementById('profile-session-key').textContent = session.sessionKey;
+
+  const enrollments = user.enrollments || [];
+  document.getElementById('profile-enrollments').innerHTML = enrollments.length
+    ? enrollments.map(id => `<span class="tag">${id}</span>`).join('')
+    : '<span style="color:var(--text-muted);font-size:0.88rem">No enrolled courses</span>';
+}
+
+function clearAuthUi() {
+  currentSession = null;
+  authToken = '';
+  localStorage.removeItem('redis-demo-token');
+
+  authGuest.classList.remove('hidden');
+  authUser.classList.add('hidden');
+  profileGuest.classList.remove('hidden');
+  profileAuthenticated.classList.add('hidden');
+}
+
+async function refreshProfile() {
+  if (!authToken) {
+    clearAuthUi();
+    return;
+  }
+  try {
+    const session = await api('/auth/me');
+    setAuthUi(session);
+  } catch (e) {
+    clearAuthUi();
+  }
+}
+
+function openLoginModal() {
+  document.getElementById('login-form').reset();
+  document.getElementById('lf-username').value = 'thiendp';
+  document.getElementById('lf-password').value = 'thiendp';
+  openModal('login-modal');
+}
+
+document.getElementById('btn-open-login').addEventListener('click', openLoginModal);
+document.getElementById('btn-login-from-profile').addEventListener('click', openLoginModal);
+document.getElementById('btn-profile-shortcut').addEventListener('click', () => switchTab('profile'));
+
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const session = await api('/auth/login', {
+      method: 'POST',
+      body: {
+        username: document.getElementById('lf-username').value.trim(),
+        password: document.getElementById('lf-password').value,
+      },
+    });
+    authToken = session.token;
+    localStorage.setItem('redis-demo-token', authToken);
+    setAuthUi(session);
+    closeModal('login-modal');
+    switchTab('profile');
+    toast('Logged in', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+});
+
+document.getElementById('btn-logout').addEventListener('click', async () => {
+  try {
+    await api('/auth/logout', { method: 'POST' });
+  } catch (e) {
+    console.warn(e);
+  }
+  clearAuthUi();
+  switchTab('students');
+  toast('Logged out', 'success');
+});
+
+document.getElementById('btn-edit-profile').addEventListener('click', () => {
+  if (!currentSession) return;
+  const user = currentSession.user;
+  document.getElementById('pf-username').value = user.username;
+  document.getElementById('pf-name').value = user.name;
+  document.getElementById('pf-cohort').value = user.cohort;
+  document.getElementById('pf-gpa').value = user.gpa;
+  openModal('profile-modal');
+});
+
+document.getElementById('profile-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const session = await api('/auth/me', {
+      method: 'PATCH',
+      body: {
+        username: document.getElementById('pf-username').value.trim(),
+        name: document.getElementById('pf-name').value.trim(),
+        cohort: document.getElementById('pf-cohort').value.trim(),
+        gpa: parseFloat(document.getElementById('pf-gpa').value),
+      },
+    });
+    setAuthUi(session);
+    closeModal('profile-modal');
+    loadStudents();
+    toast('Profile updated', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+});
+
 function gpaClass(gpa) { return gpa >= 8 ? 'gpa-high' : gpa >= 6 ? 'gpa-mid' : 'gpa-low'; }
 function capacityColor(enrolled, capacity) {
   const pct = enrolled / capacity;
@@ -166,13 +306,42 @@ window.deleteStudent = async (id) => {
   } catch (e) { toast(e.message, 'error'); }
 };
 
-// Student Search with suggestions
+// Student Search with suggestions + keyboard navigation
 let searchTimeout;
 const studentSearchInput = document.getElementById('student-search');
 const studentSuggestions = document.getElementById('student-suggestions');
+let studentSuggestionIndex = -1;
+
+function updateStudentSuggestionHighlight() {
+  studentSuggestions.querySelectorAll('.suggestion-item').forEach((el, i) => {
+    el.classList.toggle('selected', i === studentSuggestionIndex);
+    if (i === studentSuggestionIndex) el.scrollIntoView({ block: 'nearest' });
+  });
+}
+
+studentSearchInput.addEventListener('keydown', (e) => {
+  const items = studentSuggestions.querySelectorAll('.suggestion-item');
+  if (!studentSuggestions.classList.contains('show') || !items.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    studentSuggestionIndex = Math.min(studentSuggestionIndex + 1, items.length - 1);
+    updateStudentSuggestionHighlight();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    studentSuggestionIndex = Math.max(studentSuggestionIndex - 1, 0);
+    updateStudentSuggestionHighlight();
+  } else if (e.key === 'Enter' && studentSuggestionIndex >= 0) {
+    e.preventDefault();
+    items[studentSuggestionIndex].click();
+  } else if (e.key === 'Escape') {
+    studentSuggestions.classList.remove('show');
+    studentSuggestionIndex = -1;
+  }
+});
 
 studentSearchInput.addEventListener('input', () => {
   clearTimeout(searchTimeout);
+  studentSuggestionIndex = -1;
   const q = studentSearchInput.value.trim();
   if (!q) { studentSuggestions.classList.remove('show'); renderStudents(allStudents); return; }
   searchTimeout = setTimeout(async () => {
@@ -189,18 +358,20 @@ studentSearchInput.addEventListener('input', () => {
         ).join('');
         studentSuggestions.classList.add('show');
       } else {
-        studentSuggestions.classList.remove('show');
+        studentSuggestions.innerHTML = '<div class="suggestion-item suggestion-empty">No results found</div>';
+        studentSuggestions.classList.add('show');
       }
     } catch (e) { console.error(e); }
   }, 250);
 });
 
 studentSearchInput.addEventListener('blur', () => {
-  setTimeout(() => studentSuggestions.classList.remove('show'), 200);
+  setTimeout(() => { studentSuggestions.classList.remove('show'); studentSuggestionIndex = -1; }, 200);
 });
 
 window.selectStudentSuggestion = (id) => {
   studentSuggestions.classList.remove('show');
+  studentSuggestionIndex = -1;
   const s = allStudents.find(st => st.id === id);
   if (s) { studentSearchInput.value = s.name; renderStudents([s]); }
 };
@@ -356,13 +527,42 @@ window.deleteCourse = async (id) => {
   } catch (e) { toast(e.message, 'error'); }
 };
 
-// Course Search with suggestions
+// Course Search with suggestions + keyboard navigation
 let courseSearchTimeout;
 const courseSearchInput = document.getElementById('course-search');
 const courseSuggestions = document.getElementById('course-suggestions');
+let courseSuggestionIndex = -1;
+
+function updateCourseSuggestionHighlight() {
+  courseSuggestions.querySelectorAll('.suggestion-item').forEach((el, i) => {
+    el.classList.toggle('selected', i === courseSuggestionIndex);
+    if (i === courseSuggestionIndex) el.scrollIntoView({ block: 'nearest' });
+  });
+}
+
+courseSearchInput.addEventListener('keydown', (e) => {
+  const items = courseSuggestions.querySelectorAll('.suggestion-item');
+  if (!courseSuggestions.classList.contains('show') || !items.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    courseSuggestionIndex = Math.min(courseSuggestionIndex + 1, items.length - 1);
+    updateCourseSuggestionHighlight();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    courseSuggestionIndex = Math.max(courseSuggestionIndex - 1, 0);
+    updateCourseSuggestionHighlight();
+  } else if (e.key === 'Enter' && courseSuggestionIndex >= 0) {
+    e.preventDefault();
+    items[courseSuggestionIndex].click();
+  } else if (e.key === 'Escape') {
+    courseSuggestions.classList.remove('show');
+    courseSuggestionIndex = -1;
+  }
+});
 
 courseSearchInput.addEventListener('input', () => {
   clearTimeout(courseSearchTimeout);
+  courseSuggestionIndex = -1;
   const q = courseSearchInput.value.trim();
   if (!q) { courseSuggestions.classList.remove('show'); renderCourses(allCourses); return; }
   courseSearchTimeout = setTimeout(async () => {
@@ -378,18 +578,20 @@ courseSearchInput.addEventListener('input', () => {
         ).join('');
         courseSuggestions.classList.add('show');
       } else {
-        courseSuggestions.classList.remove('show');
+        courseSuggestions.innerHTML = '<div class="suggestion-item suggestion-empty">No results found</div>';
+        courseSuggestions.classList.add('show');
       }
     } catch (e) { console.error(e); }
   }, 250);
 });
 
 courseSearchInput.addEventListener('blur', () => {
-  setTimeout(() => courseSuggestions.classList.remove('show'), 200);
+  setTimeout(() => { courseSuggestions.classList.remove('show'); courseSuggestionIndex = -1; }, 200);
 });
 
 window.selectCourseSuggestion = (id) => {
   courseSuggestions.classList.remove('show');
+  courseSuggestionIndex = -1;
   const c = allCourses.find(co => co.id === id);
   if (c) { courseSearchInput.value = c.name; renderCourses([c]); }
 };
@@ -434,3 +636,4 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 // ─── Init ─────────────────────────────────────────────────────────────────
 loadStudents();
 loadCourses();
+refreshProfile();

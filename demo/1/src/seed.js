@@ -39,6 +39,7 @@ async function seed() {
       await studentRepo.save(s.id, {
         studentId: s.id,
         username: s.username,
+        password: s.password || s.username,
         name: s.name,
         cohort: s.cohort,
         gpa: s.gpa || 0,

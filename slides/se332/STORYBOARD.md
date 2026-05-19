@@ -384,10 +384,15 @@ EXEC
 
 ## Section 6: Real Project Design - UIT Course Manager (4 mins)
 
-Focus: Architecture and API Design using Node.js + Redis OM
+Focus: Architecture, API Design, and Live Demo using Node.js + Redis OM
 
 - Visual Element: Architecture Diagram: Frontend -> Node.js Backend -> Redis Stack (RedisJSON + RediSearch)
 - OpenAPI Specification (YAML) [openapi.yaml](./openapi.yaml)
+- Demo Flow:
+  - Login/logout with Redis session key (`SET EX`, `GET`, `DEL`)
+  - Edit current profile (`PATCH /auth/me` -> `JSON.SET Student:{id}`)
+  - Search students/courses with `FT.SEARCH`
+  - Enroll student and inspect `enrollment:stream:{courseId}` with `XADD`
 
 ## Section 7: Final Thoughts & Resources (1 min)
 

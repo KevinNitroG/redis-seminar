@@ -57,6 +57,10 @@ importers:
       redis-om:
         specifier: ^0.4.6
         version: 0.4.7
+    devDependencies:
+      playwright-chromium:
+        specifier: catalog:slidev
+        version: 1.58.2
 
   slides/se109:
     dependencies:

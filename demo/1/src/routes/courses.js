@@ -86,41 +86,44 @@ router.get('/search', async (req, res) => {
   try {
     const { query, lecturer, hasCapacity, sortBy = 'name', order = 'asc' } = req.query;
 
-    let search = courseRepo.search();
+    const clauses = [];
 
-    // Full-text search on course name and lecturer
     if (query) {
-      const words = query.trim().split(/\s+/).filter(w => w.length > 0);
+      const words = tokenizeSearch(query);
       if (words.length > 0) {
-        const preparedQuery = words.map(w => `${w}*`).join(' ');
-        search = search.where('name').matches(preparedQuery)
-          .or('lecturerName').matches(preparedQuery);
+        clauses.push(words.map(word => {
+          const fuzzy = word.length >= 3 ? `|@name:%${word}%|@lecturerName:%${word}%` : '';
+          return `(@name:${word}*|@lecturerName:${word}*${fuzzy})`;
+        }).join(' '));
       }
     }
 
-    // Filter by lecturer
     if (lecturer) {
-      search = search.where('lecturerName').matches(lecturer + '*');
+      const words = tokenizeSearch(lecturer);
+      if (words.length > 0) {
+        clauses.push(words.map(word => `@lecturerName:${word}*`).join(' '));
+      }
     }
 
-    // Sorting
-    const sortField = ['name', 'lecturerName', 'enrolled', 'capacity'].includes(sortBy)
-      ? (sortBy === 'lecturer' ? 'lecturerName' : sortBy)
+    const rediSearchQuery = clauses.length ? clauses.join(' ') : '*';
+    const normalizedSortBy = sortBy === 'lecturer' ? 'lecturerName' : sortBy;
+    const sortField = ['name', 'lecturerName', 'enrolled', 'capacity'].includes(normalizedSortBy)
+      ? normalizedSortBy
       : 'name';
     const sortOrder = order === 'desc' ? 'DESC' : 'ASC';
-    search = search.sortBy(sortField, sortOrder);
+    const result = await client.ft.search('Course:index', rediSearchQuery, {
+      SORTBY: { BY: sortField, DIRECTION: sortOrder },
+      LIMIT: { from: 0, size: 100 },
+    });
+    let courses = result.documents.map(doc => doc.value);
 
-    const total = await search.return.count();
-    let courses = await search.return.all();
-
-    // hasCapacity post-filter (enrolled < capacity)
     if (hasCapacity === 'true') {
       courses = courses.filter(c => c.enrolled < c.capacity);
     }
 
     res.json({
       data: courses.map(formatCourse),
-      total: hasCapacity === 'true' ? courses.length : total,
+      total: hasCapacity === 'true' ? courses.length : result.total,
       query: query || '',
     });
   } catch (err) {
@@ -390,6 +393,14 @@ router.delete('/:courseId/students/:studentId', async (req, res) => {
 });
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
+function tokenizeSearch(value) {
+  return String(value)
+    .trim()
+    .split(/\s+/)
+    .map(word => word.replace(/[^\p{L}\p{N}_-]/gu, ''))
+    .filter(Boolean);
+}
+
 function formatCourse(course) {
   return {
     id: course[EntityId] || course.courseId,

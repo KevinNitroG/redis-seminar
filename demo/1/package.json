@@ -5,7 +5,8 @@
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "seed": "node src/seed.js",
-    "dev:full": "npm run seed && npm run dev"
+    "dev:full": "npm run seed && npm run dev",
+    "capture:demo": "node scripts/capture-demo.js"
   },
   "dependencies": {
     "express": "^5.1.0",
@@ -14,7 +15,9 @@
   },
   "version": "1.0.0",
   "description": "UIT Course & Student Manager — Redis Stack demo (RedisJSON + RediSearch + Streams)",
-  "devDependencies": {},
+  "devDependencies": {
+    "playwright-chromium": "catalog:slidev"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
