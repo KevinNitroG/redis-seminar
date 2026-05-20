@@ -87,10 +87,12 @@ router.get('/search', async (req, res) => {
     const { query, cohort, minGpa, maxGpa, sortBy = 'gpa', order = 'desc' } = req.query;
 
     const clauses = [];
+    let queryUsesRediSearch = false;
 
     if (query) {
-      const words = tokenizeSearch(query);
+      const words = tokenizeSearch(query).filter(word => word.length >= 2);
       if (words.length > 0) {
+        queryUsesRediSearch = true;
         clauses.push(words.map(word => {
           const fuzzy = word.length >= 3 ? `|@name:%${word}%|@username:%${word}%` : '';
           return `(@name:${word}*|@username:${word}*${fuzzy})`;
@@ -113,15 +115,34 @@ router.get('/search', async (req, res) => {
     const rediSearchQuery = clauses.length ? clauses.join(' ') : '*';
     const sortField = ['gpa', 'name', 'cohort'].includes(sortBy) ? sortBy : 'gpa';
     const sortOrder = order === 'asc' ? 'ASC' : 'DESC';
-    const result = await client.ft.search('Student:index', rediSearchQuery, {
+    const result = await safeFtSearch('Student:index', rediSearchQuery, {
       SORTBY: { BY: sortField, DIRECTION: sortOrder },
       LIMIT: { from: 0, size: 100 },
     });
-    const students = result.documents.map(doc => doc.value);
+    let students = result.documents.map(doc => doc.value);
+
+    if (query) {
+      const allStudents = await fetchAllStudents();
+      const foldedMatches = allStudents.filter(student => matchesFoldedSearch([
+        student.studentId,
+        student.username,
+        student.name,
+      ], query));
+      students = queryUsesRediSearch
+        ? uniqueById([...students, ...foldedMatches], 'studentId')
+        : foldedMatches;
+    }
+
+    students = students
+      .filter(student => !cohort || String(student.cohort) === String(cohort))
+      .filter(student => minGpa === undefined || Number(student.gpa) >= parseFloat(minGpa))
+      .filter(student => maxGpa === undefined || Number(student.gpa) <= parseFloat(maxGpa));
+
+    students = sortByField(students, sortField, order);
 
     res.json({
       data: students.map(formatStudent),
-      total: result.total,
+      total: students.length,
       query: query || '',
     });
   } catch (err) {
@@ -233,6 +254,55 @@ function tokenizeSearch(value) {
 
 function escapeTag(value) {
   return String(value).replace(/[{}|,\\]/g, '\\$&');
+}
+
+async function safeFtSearch(index, query, options) {
+  try {
+    return await client.ft.search(index, query, options);
+  } catch (err) {
+    console.warn(`FT.SEARCH fallback for ${index}:`, err.message);
+    return { total: 0, documents: [] };
+  }
+}
+
+async function fetchAllStudents() {
+  const result = await client.ft.search('Student:index', '*', {
+    LIMIT: { from: 0, size: 1000 },
+  });
+  return result.documents.map(doc => doc.value);
+}
+
+function foldText(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase();
+}
+
+function matchesFoldedSearch(fields, query) {
+  const haystack = foldText(fields.join(' '));
+  return foldText(query)
+    .split(/\s+/)
+    .filter(Boolean)
+    .every(token => haystack.includes(token));
+}
+
+function uniqueById(items, idField) {
+  return [...new Map(items.map(item => [String(item[idField]), item])).values()];
+}
+
+function sortByField(items, field, order) {
+  const direction = order === 'asc' ? 1 : -1;
+  return [...items].sort((a, b) => {
+    const av = a[field];
+    const bv = b[field];
+    if (typeof av === 'number' && typeof bv === 'number') {
+      return (av - bv) * direction;
+    }
+    return String(av ?? '').localeCompare(String(bv ?? ''), 'vi', { sensitivity: 'base' }) * direction;
+  });
 }
 
 function formatStudent(student) {

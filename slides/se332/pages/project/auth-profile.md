@@ -6,10 +6,11 @@ hideInToc: true
 ---
 
 <!--
-- Demo bước 1: bấm Login, dùng tài khoản seed `thiendp / thiendp`.
-- Backend kiểm tra username/password từ Student document, sau đó tạo token UUID.
-- Redis lưu `session:{token}` bằng `SET ... EX 3600`, tức là session tự hết hạn sau 1 giờ.
-- Mở RedisInsight và filter `session:*`, sau đó chạy TTL để cho thấy đây là session có thời hạn.
+Ở bước này Login và dùng account seed `thiendp / thiendp`.
+Backend sẽ tìm user trong Student document, kiểm tra password demo, rồi tạo một token.
+
+Backend lưu một key `session:{token}` trong Redis bằng `SET ... EX 3600`,
+tức là session có TTL một giờ. Mở RedisInsight, filter `session:*`, rồi show TTL để chứng minh đây là session có thời hạn.
 -->
 
 ---
@@ -20,10 +21,11 @@ hideInToc: true
 ---
 
 <!--
-- Demo bước 2: sau khi login thành công, app tự chuyển qua tab Profile.
-- Nói UI không tự đoán user; frontend gửi Bearer token lên `/auth/me`.
-- Backend `GET session:{token}` để lấy studentId, rồi đọc `Student:23521476`.
-- Chỉ vào dòng Redis session key trên UI để liên hệ với key thật trong RedisInsight.
+Sau khi login xong app tự chuyển qua Profile. Ở đây mình nói rõ là UI không tự đoán user đang là ai.
+Frontend gửi Bearer token lên `/auth/me`, backend `GET session:{token}` để lấy `studentId`, rồi đọc tiếp JSON document `Student:23521476`.
+
+Redis session key trên UI để liên hệ với key thật trong RedisInsight.
+Như vậy phần profile đang được hydrate từ Redis session cộng với Student JSON.
 -->
 
 ---
@@ -34,10 +36,11 @@ hideInToc: true
 ---
 
 <!--
-- Demo bước 3: bấm Edit Profile, đổi Full Name hoặc GPA.
-- Nói đây là partial update, giống PATCH trong REST API.
-- Phần cần nhấn: session quyết định user nào được sửa profile, chứ client không gửi studentId tùy ý.
-- Sau khi Save, quay qua RedisInsight để thấy document Student đã đổi.
+Tiếp theo mình bấm Edit Profile và đổi nhẹ Full Name hoặc GPA.
+Đây là một PATCH đúng nghĩa: client chỉ gửi field muốn đổi, backend dựa vào session để biết user nào đang được sửa.
+
+Chỗ này nên nhấn một câu là client không được gửi `studentId` tùy ý để sửa người khác.
+Sau khi Save, mình quay qua RedisInsight mở `Student:23521476` để thấy field trong JSON đã đổi thật.
 -->
 
 ---
@@ -48,10 +51,12 @@ hideInToc: true
 ---
 
 <!--
-- Demo bước 2: sau login, mở Profile và bấm Edit Profile.
-- Đổi tên hoặc GPA rồi Save; UI gọi `PATCH /auth/me`.
-- Backend đọc session để biết studentId, fetch `Student:23521476`, merge field mới và save lại bằng Redis OM.
-- Trong RedisInsight mở key `Student:23521476` để thấy name/GPA đã thay đổi.
+Ảnh này là trạng thái sau khi lưu profile.
+Mình có thể nói ngắn là UI gọi `PATCH /auth/me`, backend đọc session để biết đúng `studentId`, fetch Student JSON,
+merge các field mới rồi save lại bằng Redis OM.
+
+Nếu đang demo live, mình nên dừng một nhịp ở RedisInsight để cho người nghe thấy name hoặc GPA đã thay đổi trong document.
+Đoạn này giúp nối phần auth/session với phần RedisJSON rất rõ.
 -->
 
 ---
@@ -74,8 +79,9 @@ DEL session:<uuid>
 ```
 
 <!--
-- Slide này dùng sau khi demo UI để gom lại các command Redis thật sự phía sau.
-- `SET ... EX` là pattern session management rất phổ biến với Redis.
-- `GET session` chỉ lưu state đăng nhập ngắn hạn; profile thật vẫn nằm trong Student JSON.
-- Nếu thầy/cô hỏi bảo mật: demo đang đơn giản hóa password, production phải hash password và harden token.
+Login tạo session bằng `SET ... EX`, current user thì `GET session` rồi `JSON.GET Student`, logout chỉ cần `DEL session`.
+
+Session chỉ là state đăng nhập ngắn hạn. Dữ liệu profile thật vẫn nằm trong Student JSON.
+Demo đơn giản hóa password để tập trung vào Redis,
+còn production phải hash password, harden token và kiểm soát quyền kỹ hơn.
 -->

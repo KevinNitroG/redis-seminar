@@ -4,13 +4,36 @@ class: text-center
 transition: slide-up
 ---
 
-# Section 6: Real Project Demo
+# Project Demo
 
 ## UIT Course Manager
 
 <!--
-- Mở đầu phần demo: chuyển từ lý thuyết RedisJSON, RediSearch, Streams sang một app nhỏ có đủ CRUD, search, login/session và enrollment.
-- Nhấn mạnh đây không phải app production auth đầy đủ, mà là demo có chủ đích để thấy Redis tham gia vào nhiều use case trong cùng một hệ thống.
+Tới đây chuyển từ phần lý thuyết sang một project nhỏ để thấy Redis chạy hoạt động trong một app đơn giản
+quản lý sinh viên, quản lý môn học, đăng nhập đăng xuất, sửa profile, search có filter và flow enroll/unenroll.
+
+ edis không chỉ đứng ở vai trò cache. Redis Stack có thể vừa lưu document bằng RedisJSON,
+vừa search bằng RediSearch, vừa giữ session login, vừa ghi log enrollment bằng Streams.
+-->
+
+---
+hideInToc: true
+---
+
+## Flows
+
+| Part | Demo flow | Redis focus |
+| ---- | --------- | ----------- |
+| 1 | Architecture + setup | Redis Stack modules |
+| 2 | Login, logout, edit profile | Session key + JSON document |
+| 3 | Student search + course filters | RediSearch + Vietnamese fallback |
+| 4 | Enroll, then unenroll | JSON update + Stream audit log |
+
+<!--
+Bao gồm phần auth/profile, rồi search/filter, cuối cùng là enroll và unenroll.
+
+Login để thấy session key, search để thấy index,
+và enroll/unenroll để thấy Stream ghi event.
 -->
 
 ---

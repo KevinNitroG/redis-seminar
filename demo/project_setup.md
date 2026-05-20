@@ -118,7 +118,9 @@ Sau khi chạy `docker compose up -d`, bạn có thể truy cập Redis theo cá
 ## Frontend Features
 - 🔐 **Login/logout** with Redis-backed session keys and TTL
 - 👤 **Simple profile editor** that updates the logged-in Student JSON document
-- 🔍 **Fuzzy search** with autocomplete suggestions (RediSearch) — prefix wildcard + `%fuzzy%`
+- 🔍 **Vietnamese-friendly search** with autocomplete suggestions (RediSearch + accent-insensitive fallback)
+- 📚 **Course filters** by lecturer, capacity, and sort order
+- 🧭 **Searchable enroll dropdown** so the presenter can pick a student instead of memorizing MSSV
 - ⌨️ **Keyboard navigation** on suggestions: `↑↓` navigate, `Enter` select, `Esc` close
 - 📊 **Stats dashboard** (total, avg GPA, cohorts)
 - 🎨 **Dark theme** with gradient accents and animations
@@ -192,12 +194,13 @@ Mở trình duyệt vào `http://localhost:3000`.
 
 ### 2️⃣ RediSearch — Fuzzy Search & Autocomplete (3 phút)
 
-#### 2.1 Demo prefix search
+#### 2.1 Demo one-character + Vietnamese-friendly search
 
-1. Tab **Students**, gõ vào ô search: `ngu`
-2. Suggestions xuất hiện ngay sau 250ms với các sinh viên có tên bắt đầu bằng "Ngu..."
+1. Tab **Students**, gõ vào ô search: `d`
+2. Suggestions xuất hiện ngay, kể cả khi mới gõ 1 ký tự
+3. Gõ tiếp `dang` hoặc `thien` để demo tìm không dấu với dữ liệu tiếng Việt
 
-**Nói:** *"RediSearch index tất cả text fields. Query `ngu*` match prefix — giống autocomplete. Backend gọi `FT.SEARCH Student:idx @name:ngu*`."*
+**Nói:** *"RediSearch index các field text để search nhanh. Với tiếng Việt và query rất ngắn như một ký tự, backend có thêm bước normalize không dấu, nên `Đặng` vẫn tìm được bằng `d` hoặc `dang`."*
 
 #### 2.2 Demo fuzzy matching
 
@@ -219,6 +222,15 @@ Mở trình duyệt vào `http://localhost:3000`.
 
 **Nói:** *"RediSearch hỗ trợ combined filter: full-text + numeric range + tag. `FT.SEARCH Student:idx @cohort:{23} @gpa:[8.0 +inf]`"*
 
+#### 2.5 Filter course
+
+1. Chuyển sang tab **Courses**
+2. Gõ `c` hoặc `chuyen` trong ô search
+3. Chọn **Has Seats** trong capacity filter
+4. Nếu muốn, chọn lecturer hoặc sort theo **Most Enrolled**
+
+**Nói:** *"Course dùng index riêng `Course:index`. API gom search text, lecturer, capacity và sort vào một endpoint `/courses/search`, nên UI filter giống app thật chứ không chỉ là search box đơn giản."*
+
 ---
 
 ### 3️⃣ Enrollment + Redis Streams (3 phút)
@@ -227,14 +239,15 @@ Mở trình duyệt vào `http://localhost:3000`.
 
 1. Chuyển sang tab **Courses**
 2. Tìm môn `SE332.Q21`
-3. Click **➕ Enroll** → nhập MSSV: `23521001`
-4. Click **Enroll**
+3. Click **➕ Enroll**
+4. Gõ `d`, `thien`, hoặc một phần MSSV trong dropdown
+5. Chọn sinh viên trong suggestions rồi click **Enroll**
 
 **Chuyển sang RedisInsight → Streams:**
 - Tìm key `enrollment:stream:SE332.Q21`
 - Thấy event vừa được append với `action: ENROLL`
 
-**Nói:** *"Mỗi lần enroll, backend gọi `XADD enrollment:stream:SE332.Q21 * studentId 23521001 action ENROLL timestamp ...`. Streams là append-only log — perfect cho audit trail!"*
+**Nói:** *"Mỗi lần enroll, backend validate course còn chỗ và student tồn tại, rồi update JSON ở cả Course và Student. Đồng thời backend gọi `XADD enrollment:stream:SE332.Q21 * studentId ... action ENROLL timestamp ...`. Streams là append-only log, rất hợp để làm audit trail."*
 
 #### 3.2 Kiểm tra enrolled count
 
@@ -250,7 +263,7 @@ Mở trình duyệt vào `http://localhost:3000`.
 
 **RedisInsight Streams:** Thấy event mới `action: UNENROLL` được append.
 
-**Nói:** *"Stream không xóa record cũ — chỉ append thêm. Đây là event sourcing pattern — bạn có thể replay lịch sử."*
+**Nói:** *"Stream không xóa record cũ. Khi unenroll, hệ thống chỉ append thêm một event `UNENROLL`. Nếu replay stream từ đầu, mình sẽ thấy được toàn bộ lịch sử đăng ký và hủy đăng ký."*
 
 ---
 

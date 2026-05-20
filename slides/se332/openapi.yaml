@@ -419,8 +419,9 @@ paths:
         - name: hasCapacity
           in: query
           schema:
-            type: boolean
-          description: Filter courses with available seats
+            type: string
+            enum: ['true', full]
+          description: Filter courses with available seats or courses that are full
         - name: sortBy
           in: query
           schema:
@@ -442,8 +443,8 @@ paths:
                 $ref: '#/components/schemas/CourseSearchResult'
   /courses/{courseId}/students:
     post:
-      summary: Enroll student in course (XADD + SADD)
-      description: With transaction
+      summary: Enroll student in course (JSON.SET + XADD)
+      description: Updates Course/Student JSON documents and appends an enrollment stream event
       tags: [course]
       parameters:
         - name: courseId
@@ -496,7 +497,8 @@ paths:
                     example: 3
   /courses/{courseId}/students/{studentId}:
     delete:
-      summary: Unenroll student from course
+      summary: Unenroll student from course (JSON.SET + XADD)
+      description: Updates Course/Student JSON documents and appends an unenrollment stream event
       tags: [course]
       parameters:
         - name: courseId

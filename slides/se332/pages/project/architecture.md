@@ -28,11 +28,12 @@ One Redis Stack instance powers documents, search, session state, and event logs
 </div>
 
 <!--
-- Giải thích luồng chính: frontend gọi Express API, API dùng Redis OM cho Student/Course.
-- RedisJSON lưu document: Student:* và Course:*.
-- RediSearch tạo index để search theo tên, username, lecturer, GPA.
-- Login tạo key session:{token} có TTL; logout thì DEL key.
-- Enroll/unenroll ghi thêm event vào Redis Stream để có audit log.
+Trình duyệt chỉ gọi REST API, không nói chuyện trực tiếp với Redis.
+Express API là lớp xử lý nghiệp vụ, còn Redis OM giúp map Student và Course thành document trong RedisJSON.
+
+Phần search nằm riêng ở RediSearch index, nên khi gõ tên sinh viên hoặc lọc môn học thì backend không phải scan từng JSON document.
+Auth thì tạo `session:{token}` có TTL; logout chỉ cần xóa key đó.
+Riêng enroll/unenroll ngoài việc cập nhật JSON còn ghi thêm Stream event, để có log lịch sử thao tác.
 -->
 
 ---
@@ -56,7 +57,6 @@ OpenAPI spec: `slides/se332/openapi.yaml`
 </div>
 
 <!--
-- Nói nhanh API map để giảng viên thấy demo có thiết kế backend rõ ràng, không chỉ là UI tĩnh.
-- Khi demo, không cần mở hết endpoint; chỉ chọn các flow có ý nghĩa: login/session, edit profile, search, enrollment stream.
-- Nhấn mạnh OpenAPI đã được cập nhật để mô tả thêm auth/profile.
+Mỗi flow trên UI đều map xuống một nhóm command Redis: login thì `SET EX`, profile thì `JSON.GET` và `JSON.SET`,
+search thì `FT.SEARCH`, còn enrollment thì vừa `JSON.SET` vừa `XADD`.
 -->

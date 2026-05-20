@@ -32,6 +32,32 @@ function openModal(id) { document.getElementById(id).classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 window.closeModal = closeModal;
 
+function foldText(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase();
+}
+
+function matchesText(fields, query) {
+  const haystack = foldText(fields.join(' '));
+  return foldText(query)
+    .split(/\s+/)
+    .filter(Boolean)
+    .every(token => haystack.includes(token));
+}
+
+function highlightMatch(text, query) {
+  const source = String(text ?? '');
+  const foldedSource = foldText(source);
+  const token = foldText(query).split(/\s+/).filter(Boolean).find(part => foldedSource.includes(part));
+  if (!token) return source;
+  const idx = foldedSource.indexOf(token);
+  return source.slice(0, idx) + `<span class="match">${source.slice(idx, idx + token.length)}</span>` + source.slice(idx + token.length);
+}
+
 // ─── Tabs ─────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -343,11 +369,18 @@ studentSearchInput.addEventListener('input', () => {
   clearTimeout(searchTimeout);
   studentSuggestionIndex = -1;
   const q = studentSearchInput.value.trim();
-  if (!q) { studentSuggestions.classList.remove('show'); renderStudents(allStudents); return; }
+  if (!q) {
+    studentSuggestions.classList.remove('show');
+    studentSuggestionIndex = -1;
+    renderStudents(allStudents);
+    updateStudentStats(allStudents);
+    return;
+  }
   searchTimeout = setTimeout(async () => {
     try {
       const res = await api(`/students/search?query=${encodeURIComponent(q)}`);
       renderStudents(res.data);
+      updateStudentStats(res.data);
       // Show suggestions
       if (res.data.length) {
         studentSuggestions.innerHTML = res.data.slice(0, 6).map(s =>
@@ -362,7 +395,7 @@ studentSearchInput.addEventListener('input', () => {
         studentSuggestions.classList.add('show');
       }
     } catch (e) { console.error(e); }
-  }, 250);
+  }, 120);
 });
 
 studentSearchInput.addEventListener('blur', () => {
@@ -373,14 +406,12 @@ window.selectStudentSuggestion = (id) => {
   studentSuggestions.classList.remove('show');
   studentSuggestionIndex = -1;
   const s = allStudents.find(st => st.id === id);
-  if (s) { studentSearchInput.value = s.name; renderStudents([s]); }
+  if (s) {
+    studentSearchInput.value = s.name;
+    renderStudents([s]);
+    updateStudentStats([s]);
+  }
 };
-
-function highlightMatch(text, query) {
-  const idx = text.toLowerCase().indexOf(query.toLowerCase());
-  if (idx === -1) return text;
-  return text.slice(0, idx) + `<span class="match">${text.slice(idx, idx + query.length)}</span>` + text.slice(idx + query.length);
-}
 
 // Filters
 document.getElementById('btn-filter-students').addEventListener('click', async () => {
@@ -422,6 +453,7 @@ async function loadCourses() {
     allCourses = res.data;
     renderCourses(allCourses);
     updateCourseStats(allCourses);
+    populateLecturerFilter(allCourses);
   } catch (e) { toast(e.message, 'error'); }
 }
 
@@ -431,6 +463,16 @@ function updateCourseStats(list) {
   document.getElementById('stat-total-enrolled').textContent = totalEnrolled;
   const totalSeats = list.reduce((s, c) => s + (c.capacity - c.enrolled), 0);
   document.getElementById('stat-available-seats').textContent = totalSeats;
+}
+
+function populateLecturerFilter(list) {
+  const sel = document.getElementById('filter-lecturer');
+  const current = sel.value;
+  const lecturers = [...new Set(list.map(c => c.lecturer?.name).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
+  sel.innerHTML = '<option value="">All Lecturers</option>' +
+    lecturers.map(name => `<option value="${name}">${name}</option>`).join('');
+  if (lecturers.includes(current)) sel.value = current;
 }
 
 function renderCourses(list) {
@@ -563,26 +605,14 @@ courseSearchInput.addEventListener('keydown', (e) => {
 courseSearchInput.addEventListener('input', () => {
   clearTimeout(courseSearchTimeout);
   courseSuggestionIndex = -1;
-  const q = courseSearchInput.value.trim();
-  if (!q) { courseSuggestions.classList.remove('show'); renderCourses(allCourses); return; }
+  if (!courseSearchInput.value.trim()) {
+    courseSuggestions.classList.remove('show');
+    applyCourseFilters();
+    return;
+  }
   courseSearchTimeout = setTimeout(async () => {
-    try {
-      const res = await api(`/courses/search?query=${encodeURIComponent(q)}`);
-      renderCourses(res.data);
-      if (res.data.length) {
-        courseSuggestions.innerHTML = res.data.slice(0, 6).map(c =>
-          `<div class="suggestion-item" onclick="selectCourseSuggestion('${c.id}')">
-            <span>${highlightMatch(c.name, q)}</span>
-            <span class="sub">${c.id} · ${c.lecturer.name} · ${c.enrolled}/${c.capacity}</span>
-          </div>`
-        ).join('');
-        courseSuggestions.classList.add('show');
-      } else {
-        courseSuggestions.innerHTML = '<div class="suggestion-item suggestion-empty">No results found</div>';
-        courseSuggestions.classList.add('show');
-      }
-    } catch (e) { console.error(e); }
-  }, 250);
+    applyCourseFilters({ showSuggestions: true });
+  }, 120);
 });
 
 courseSearchInput.addEventListener('blur', () => {
@@ -593,26 +623,180 @@ window.selectCourseSuggestion = (id) => {
   courseSuggestions.classList.remove('show');
   courseSuggestionIndex = -1;
   const c = allCourses.find(co => co.id === id);
-  if (c) { courseSearchInput.value = c.name; renderCourses([c]); }
+  if (c) {
+    courseSearchInput.value = c.name;
+    renderCourses([c]);
+    updateCourseStats([c]);
+  }
 };
 
+function buildCourseParams() {
+  const params = new URLSearchParams();
+  const q = courseSearchInput.value.trim();
+  const lecturer = document.getElementById('filter-lecturer').value;
+  const hasCapacity = document.getElementById('filter-capacity').value;
+  const [sortBy, order] = document.getElementById('filter-sort-course').value.split('-');
+  if (q) params.set('query', q);
+  if (lecturer) params.set('lecturer', lecturer);
+  if (hasCapacity) params.set('hasCapacity', hasCapacity);
+  params.set('sortBy', sortBy);
+  params.set('order', order);
+  return params;
+}
+
+async function applyCourseFilters({ showSuggestions = false } = {}) {
+  const q = courseSearchInput.value.trim();
+  try {
+    const res = await api(`/courses/search?${buildCourseParams()}`);
+    renderCourses(res.data);
+    updateCourseStats(res.data);
+
+    if (!showSuggestions) return;
+    if (res.data.length) {
+      courseSuggestions.innerHTML = res.data.slice(0, 6).map(c =>
+        `<div class="suggestion-item" onclick="selectCourseSuggestion('${c.id}')">
+          <span>${highlightMatch(c.name, q)}</span>
+          <span class="sub">${c.id} · ${c.lecturer.name} · ${c.enrolled}/${c.capacity}</span>
+        </div>`
+      ).join('');
+    } else {
+      courseSuggestions.innerHTML = '<div class="suggestion-item suggestion-empty">No results found</div>';
+    }
+    courseSuggestions.classList.add('show');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+document.getElementById('btn-filter-courses').addEventListener('click', () => applyCourseFilters());
+['filter-lecturer', 'filter-capacity', 'filter-sort-course'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => applyCourseFilters());
+});
+
+document.getElementById('btn-reset-courses').addEventListener('click', () => {
+  document.getElementById('filter-lecturer').value = '';
+  document.getElementById('filter-capacity').value = '';
+  document.getElementById('filter-sort-course').value = 'name-asc';
+  courseSearchInput.value = '';
+  courseSuggestions.classList.remove('show');
+  loadCourses();
+});
+
 // Enrollment
-window.openEnroll = (courseId) => {
+const enrollSearchInput = document.getElementById('ef-student-search');
+const enrollSuggestions = document.getElementById('ef-student-suggestions');
+const selectedStudentEl = document.getElementById('ef-selected-student');
+let enrollCandidates = [];
+let enrollSuggestionIndex = -1;
+
+window.openEnroll = async (courseId) => {
   document.getElementById('ef-courseId').value = courseId;
   document.getElementById('ef-studentId').value = '';
+  enrollSearchInput.value = '';
+  enrollSuggestionIndex = -1;
+  selectedStudentEl.textContent = 'No student selected';
+  selectedStudentEl.classList.add('empty');
+
+  if (!allStudents.length) await loadStudents();
+  const course = allCourses.find(c => c.id === courseId);
+  const enrolledIds = new Set(course?.students || []);
+  enrollCandidates = allStudents.filter(student => !enrolledIds.has(student.id));
+
+  renderEnrollSuggestions(enrollCandidates.slice(0, 8), '');
   openModal('enroll-modal');
+  setTimeout(() => enrollSearchInput.focus(), 50);
 };
+
+function renderEnrollSuggestions(list, query) {
+  if (list.length) {
+    enrollSuggestions.innerHTML = list.map(student =>
+      `<div class="suggestion-item" onclick="selectEnrollStudent('${student.id}')">
+        <span>${highlightMatch(student.name, query)} <small style="color:var(--text-muted)">@${student.username}</small></span>
+        <span class="sub">MSSV: ${student.id} · K${student.cohort} · GPA ${student.gpa}</span>
+      </div>`
+    ).join('');
+  } else {
+    enrollSuggestions.innerHTML = '<div class="suggestion-item suggestion-empty">No eligible students found</div>';
+  }
+  enrollSuggestions.classList.add('show');
+  updateEnrollSuggestionHighlight();
+}
+
+function updateEnrollSuggestionHighlight() {
+  enrollSuggestions.querySelectorAll('.suggestion-item').forEach((el, i) => {
+    el.classList.toggle('selected', i === enrollSuggestionIndex);
+    if (i === enrollSuggestionIndex) el.scrollIntoView({ block: 'nearest' });
+  });
+}
+
+window.selectEnrollStudent = (studentId) => {
+  const student = enrollCandidates.find(st => st.id === studentId);
+  if (!student) return;
+  document.getElementById('ef-studentId').value = student.id;
+  enrollSearchInput.value = `${student.name} (${student.id})`;
+  selectedStudentEl.textContent = `${student.name} · MSSV ${student.id} · K${student.cohort}`;
+  selectedStudentEl.classList.remove('empty');
+  enrollSuggestions.classList.remove('show');
+  enrollSuggestionIndex = -1;
+};
+
+enrollSearchInput.addEventListener('input', () => {
+  document.getElementById('ef-studentId').value = '';
+  selectedStudentEl.textContent = 'No student selected';
+  selectedStudentEl.classList.add('empty');
+  enrollSuggestionIndex = -1;
+  const q = enrollSearchInput.value.trim();
+  const matches = q
+    ? enrollCandidates.filter(student => matchesText([student.id, student.username, student.name], q))
+    : enrollCandidates;
+  renderEnrollSuggestions(matches.slice(0, 8), q);
+});
+
+enrollSearchInput.addEventListener('focus', () => {
+  const q = enrollSearchInput.value.trim();
+  const matches = q
+    ? enrollCandidates.filter(student => matchesText([student.id, student.username, student.name], q))
+    : enrollCandidates;
+  renderEnrollSuggestions(matches.slice(0, 8), q);
+});
+
+enrollSearchInput.addEventListener('keydown', (e) => {
+  const items = enrollSuggestions.querySelectorAll('.suggestion-item:not(.suggestion-empty)');
+  if (!enrollSuggestions.classList.contains('show') || !items.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    enrollSuggestionIndex = Math.min(enrollSuggestionIndex + 1, items.length - 1);
+    updateEnrollSuggestionHighlight();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    enrollSuggestionIndex = Math.max(enrollSuggestionIndex - 1, 0);
+    updateEnrollSuggestionHighlight();
+  } else if (e.key === 'Enter' && enrollSuggestionIndex >= 0) {
+    e.preventDefault();
+    items[enrollSuggestionIndex].click();
+  } else if (e.key === 'Escape') {
+    enrollSuggestions.classList.remove('show');
+    enrollSuggestionIndex = -1;
+  }
+});
+
+enrollSearchInput.addEventListener('blur', () => {
+  setTimeout(() => { enrollSuggestions.classList.remove('show'); enrollSuggestionIndex = -1; }, 200);
+});
 
 document.getElementById('enroll-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const courseId = document.getElementById('ef-courseId').value;
   const studentId = document.getElementById('ef-studentId').value;
+  if (!studentId) {
+    toast('Choose a student from the dropdown first', 'error');
+    return;
+  }
   try {
     await api(`/courses/${courseId}/students`, { method: 'POST', body: { studentId } });
     toast(`Enrolled ${studentId} in ${courseId}!`, 'success');
     closeModal('enroll-modal');
-    loadCourses();
-    loadStudents();
+    await loadCourses();
+    await loadStudents();
+    await applyCourseFilters();
   } catch (e) { toast(e.message, 'error'); }
 });
 
@@ -621,8 +805,9 @@ window.unenroll = async (courseId, studentId) => {
   try {
     await api(`/courses/${courseId}/students/${studentId}`, { method: 'DELETE' });
     toast(`Unenrolled ${studentId}`, 'success');
-    loadCourses();
-    loadStudents();
+    await loadCourses();
+    await loadStudents();
+    await applyCourseFilters();
   } catch (e) { toast(e.message, 'error'); }
 };
 

@@ -103,6 +103,26 @@
         <button class="btn btn-primary" id="btn-add-course">➕ Add Course</button>
       </div>
 
+      <!-- Filters -->
+      <div class="filter-row">
+        <select id="filter-lecturer">
+          <option value="">All Lecturers</option>
+        </select>
+        <select id="filter-capacity">
+          <option value="">All Capacity</option>
+          <option value="true">Has Seats</option>
+          <option value="full">Full Courses</option>
+        </select>
+        <select id="filter-sort-course">
+          <option value="name-asc">Name A→Z</option>
+          <option value="name-desc">Name Z→A</option>
+          <option value="enrolled-desc">Most Enrolled</option>
+          <option value="capacity-desc">Highest Capacity</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" id="btn-filter-courses">🔍 Filter</button>
+        <button class="btn btn-secondary btn-sm" id="btn-reset-courses">↻ Reset</button>
+      </div>
+
       <!-- Course List -->
       <div id="course-list" class="card-grid">
         <div class="loading"><div class="spinner"></div></div>
@@ -237,9 +257,14 @@
       <h2>Enroll Student</h2>
       <form id="enroll-form">
         <input type="hidden" id="ef-courseId">
+        <input type="hidden" id="ef-studentId">
         <div class="form-group">
-          <label for="ef-studentId">Student ID (MSSV)</label>
-          <input type="text" id="ef-studentId" placeholder="e.g. 23521476" required>
+          <label for="ef-student-search">Student</label>
+          <div class="search-box modal-search">
+            <input type="text" id="ef-student-search" placeholder="Search by name, username, or MSSV..." autocomplete="off">
+            <div class="suggestions" id="ef-student-suggestions"></div>
+          </div>
+          <div class="selected-student empty" id="ef-selected-student">No student selected</div>
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" onclick="closeModal('enroll-modal')">Cancel</button>

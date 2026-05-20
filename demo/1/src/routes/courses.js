@@ -10,7 +10,7 @@
  *   PUT    /courses/:id                         → JSON.SET
  *   DELETE /courses/:id                         → JSON.DEL
  *   GET    /courses/search                      → FT.SEARCH with filters
- *   POST   /courses/:courseId/students           → XADD + SADD (enrollment via Stream + Set)
+ *   POST   /courses/:courseId/students           → JSON.SET + XADD (enrollment state + stream log)
  *   GET    /courses/:courseId/students           → SMEMBERS + JSON.GET
  *   DELETE /courses/:courseId/students/:studentId → SREM
  */
@@ -87,10 +87,13 @@ router.get('/search', async (req, res) => {
     const { query, lecturer, hasCapacity, sortBy = 'name', order = 'asc' } = req.query;
 
     const clauses = [];
+    let queryUsesRediSearch = false;
+    let lecturerUsesRediSearch = false;
 
     if (query) {
-      const words = tokenizeSearch(query);
+      const words = tokenizeSearch(query).filter(word => word.length >= 2);
       if (words.length > 0) {
+        queryUsesRediSearch = true;
         clauses.push(words.map(word => {
           const fuzzy = word.length >= 3 ? `|@name:%${word}%|@lecturerName:%${word}%` : '';
           return `(@name:${word}*|@lecturerName:${word}*${fuzzy})`;
@@ -99,8 +102,9 @@ router.get('/search', async (req, res) => {
     }
 
     if (lecturer) {
-      const words = tokenizeSearch(lecturer);
+      const words = tokenizeSearch(lecturer).filter(word => word.length >= 2);
       if (words.length > 0) {
+        lecturerUsesRediSearch = true;
         clauses.push(words.map(word => `@lecturerName:${word}*`).join(' '));
       }
     }
@@ -111,19 +115,36 @@ router.get('/search', async (req, res) => {
       ? normalizedSortBy
       : 'name';
     const sortOrder = order === 'desc' ? 'DESC' : 'ASC';
-    const result = await client.ft.search('Course:index', rediSearchQuery, {
+    const result = await safeFtSearch('Course:index', rediSearchQuery, {
       SORTBY: { BY: sortField, DIRECTION: sortOrder },
       LIMIT: { from: 0, size: 100 },
     });
     let courses = result.documents.map(doc => doc.value);
 
-    if (hasCapacity === 'true') {
-      courses = courses.filter(c => c.enrolled < c.capacity);
+    if (query || lecturer) {
+      const allCourses = await fetchAllCourses();
+      const foldedMatches = allCourses.filter(course => {
+        const queryOk = !query || matchesFoldedSearch([
+          course.courseId,
+          course.name,
+          course.lecturerName,
+          ...(course.practice || []),
+        ], query);
+        const lecturerOk = !lecturer || matchesFoldedSearch([course.lecturerName], lecturer);
+        return queryOk && lecturerOk;
+      });
+      const hasUsefulIndexSearch = (!query || queryUsesRediSearch) && (!lecturer || lecturerUsesRediSearch);
+      courses = hasUsefulIndexSearch
+        ? uniqueById([...courses, ...foldedMatches], 'courseId')
+        : foldedMatches;
     }
+
+    courses = courses.filter(course => matchesCapacityFilter(course, hasCapacity));
+    courses = sortByField(courses, sortField, order);
 
     res.json({
       data: courses.map(formatCourse),
-      total: hasCapacity === 'true' ? courses.length : result.total,
+      total: courses.length,
       query: query || '',
     });
   } catch (err) {
@@ -399,6 +420,61 @@ function tokenizeSearch(value) {
     .split(/\s+/)
     .map(word => word.replace(/[^\p{L}\p{N}_-]/gu, ''))
     .filter(Boolean);
+}
+
+async function safeFtSearch(index, query, options) {
+  try {
+    return await client.ft.search(index, query, options);
+  } catch (err) {
+    console.warn(`FT.SEARCH fallback for ${index}:`, err.message);
+    return { total: 0, documents: [] };
+  }
+}
+
+async function fetchAllCourses() {
+  const result = await client.ft.search('Course:index', '*', {
+    LIMIT: { from: 0, size: 1000 },
+  });
+  return result.documents.map(doc => doc.value);
+}
+
+function foldText(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase();
+}
+
+function matchesFoldedSearch(fields, query) {
+  const haystack = foldText(fields.join(' '));
+  return foldText(query)
+    .split(/\s+/)
+    .filter(Boolean)
+    .every(token => haystack.includes(token));
+}
+
+function uniqueById(items, idField) {
+  return [...new Map(items.map(item => [String(item[idField]), item])).values()];
+}
+
+function matchesCapacityFilter(course, hasCapacity) {
+  if (hasCapacity === 'true') return Number(course.enrolled || 0) < Number(course.capacity || 0);
+  if (hasCapacity === 'full') return Number(course.enrolled || 0) >= Number(course.capacity || 0);
+  return true;
+}
+
+function sortByField(items, field, order) {
+  const direction = order === 'desc' ? -1 : 1;
+  return [...items].sort((a, b) => {
+    const av = a[field];
+    const bv = b[field];
+    if (typeof av === 'number' && typeof bv === 'number') {
+      return (av - bv) * direction;
+    }
+    return String(av ?? '').localeCompare(String(bv ?? ''), 'vi', { sensitivity: 'base' }) * direction;
+  });
 }
 
 function formatCourse(course) {

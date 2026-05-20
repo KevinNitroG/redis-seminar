@@ -64,15 +64,45 @@ async function main() {
   await page.screenshot({ path: shot('05-profile-updated.png') });
 
   await page.click('.tab-btn[data-tab="students"]');
-  await page.fill('#student-search', 'thie');
-  await page.waitForTimeout(400);
+  await page.fill('#student-search', 'd');
+  await page.waitForTimeout(300);
   await page.screenshot({ path: shot('06-student-search.png') });
 
   await page.click('.tab-btn[data-tab="courses"]');
   await page.waitForSelector('#course-list .card');
+  await page.fill('#course-search', 'c');
+  await page.selectOption('#filter-capacity', 'true');
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.screenshot({ path: shot('07-course-filter.png') });
+
   await page.click('#course-list .card button[onclick^="openEnroll"]');
-  await page.fill('#ef-studentId', '23521476');
-  await page.screenshot({ path: shot('07-enroll-modal.png') });
+  const courseId = await page.locator('#ef-courseId').inputValue();
+  await page.fill('#ef-student-search', 'd');
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: shot('08-enroll-dropdown.png') });
+
+  await page.click('#ef-student-suggestions .suggestion-item:not(.suggestion-empty)');
+  const studentId = await page.locator('#ef-studentId').inputValue();
+  await page.screenshot({ path: shot('09-enroll-selected.png') });
+
+  page.on('dialog', dialog => dialog.accept());
+  await Promise.all([
+    page.waitForResponse(response => response.url().includes(`/courses/${courseId}/students`) && response.request().method() === 'POST'),
+    page.click('#enroll-form button[type="submit"]'),
+  ]);
+  await page.waitForResponse(response => response.url().includes('/courses/search') && response.request().method() === 'GET');
+  await page.waitForSelector(`#course-list .card[data-id="${courseId}"] .enrolled-chip`);
+  await page.screenshot({ path: shot('10-enroll-updated.png') });
+
+  const enrolledChip = page.locator(`#course-list .card[data-id="${courseId}"] .enrolled-chip`, { hasText: studentId });
+  await Promise.all([
+    page.waitForResponse(response => response.url().includes(`/courses/${courseId}/students/${studentId}`) && response.request().method() === 'DELETE'),
+    enrolledChip.locator('.remove-btn').click(),
+  ]);
+  await page.waitForResponse(response => response.url().includes('/courses/search') && response.request().method() === 'GET');
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: shot('11-unenroll-updated.png') });
 
   await browser.close();
 
