@@ -2,7 +2,9 @@
 layout: center
 ---
 
-## Section 2: Core Data Types & Commands
+# Section 1
+
+## Core Data Types & Commands
 
 ---
 hideInToc: true

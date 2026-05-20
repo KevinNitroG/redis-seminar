@@ -4,7 +4,9 @@ class: text-center
 transition: slide-up
 ---
 
-# Deploy & Ecosystem & Cloud Native
+# Section 4
+
+## Deploy & Ecosystem & Cloud Native
 
 ---
 src: ./deploy-scale.md

@@ -4,9 +4,9 @@ class: text-center
 transition: slide-up
 ---
 
-# Project Demo
+# Section 5
 
-## UIT Course Manager
+## Project Demo - UIT Course Manager
 
 <!--
 Tới đây chuyển từ phần lý thuyết sang một project nhỏ để thấy Redis chạy hoạt động trong một app đơn giản
@@ -22,12 +22,12 @@ hideInToc: true
 
 ## Flows
 
-| Part | Demo flow | Redis focus |
-| ---- | --------- | ----------- |
-| 1 | Architecture + setup | Redis Stack modules |
-| 2 | Login, logout, edit profile | Session key + JSON document |
-| 3 | Student search + course filters | RediSearch + Vietnamese fallback |
-| 4 | Enroll, then unenroll | JSON update + Stream audit log |
+| Part | Demo flow                       | Redis focus                      |
+| ---- | ------------------------------- | -------------------------------- |
+| 1    | Architecture + setup            | Redis Stack modules              |
+| 2    | Login, logout, edit profile     | Session key + JSON document      |
+| 3    | Student search + course filters | RediSearch + Vietnamese fallback |
+| 4    | Enroll, then unenroll           | JSON update + Stream audit log   |
 
 <!--
 Bao gồm phần auth/profile, rồi search/filter, cuối cùng là enroll và unenroll.

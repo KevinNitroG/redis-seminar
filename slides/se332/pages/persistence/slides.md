@@ -4,7 +4,9 @@ class: text-center
 transition: slide-up
 ---
 
-# Persistence, Durability & Transactions
+# Section 3
+
+## Persistence, Durability & Transactions
 
 ---
 src: ./persistence.md
