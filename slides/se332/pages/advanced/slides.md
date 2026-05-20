@@ -4,9 +4,7 @@ class: text-center
 transition: slide-up
 ---
 
-# Section 3
-
-## Advanced Patterns & Data Structures
+# Advanced Patterns & Data Structures
 
 <!--
 Chào mọi người! Trong Phần 3 này chúng ta sẽ cùng tìm hiểu về "Advanced Patterns & Data Structures" - các cấu trúc dữ liệu nâng cao và các mẫu thiết kế thực tế trong Redis.

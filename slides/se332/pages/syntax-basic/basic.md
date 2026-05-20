@@ -1,10 +1,10 @@
 ---
 layout: center
+class: text-center
+transition: slide-up
 ---
 
-# Section 1
-
-## Core Data Types & Commands
+# Core Data Types & Commands
 
 ---
 hideInToc: true

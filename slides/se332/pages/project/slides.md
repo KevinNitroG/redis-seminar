@@ -4,9 +4,7 @@ class: text-center
 transition: slide-up
 ---
 
-# Section 5
-
-## Project Demo - UIT Course Manager
+# Project Demo - UIT Course Manager
 
 <!--
 Tới đây chuyển từ phần lý thuyết sang một project nhỏ để thấy Redis chạy hoạt động trong một app đơn giản
