@@ -46,11 +46,9 @@ Tuỳ nhu cầu: Enterprise nếu có budget, OT Container Kit nếu muốn open
 -->
 
 ---
-
 layout: figure
 figureUrl: https://ot-container-kit.github.io/redis-operator/assets/img/redis-operator-architecture.ae3c73c9.png
 figureCaption: 'OT Container Kit Architecture - CRDs and Controller'
-
 ---
 
 ## OT Container Kit Architecture - CRDs and Controller
