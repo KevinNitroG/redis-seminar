@@ -60,13 +60,11 @@ graph TD
 </div>
 
 <!--
-Bây giờ chúng ta sẽ chuyển sang một cơ chế truyền tin vô cùng đặc biệt trong Redis: Pub/Sub, viết tắt của Publish/Subscribe. Đây là mô hình truyền tin theo cơ chế Push-based (đẩy dữ liệu), giúp tách biệt hoàn toàn (decouple) giữa bên gửi (Publisher) và bên nhận (Subscriber).
+Tiếp theo là Pub/Sub (Publish/Subscribe), cơ chế truyền tin Push-based giúp tách biệt hoàn toàn (decouple) bên gửi và bên nhận.
 
-Publisher khi gửi một thông điệp sẽ chỉ đơn giản là bắn tin nhắn đó vào một "Channel" (kênh truyền). Họ hoàn toàn không cần biết và không cần quan tâm có bao nhiêu người đang lắng nghe kênh đó. Ngược lại, người nhận chỉ cần SUBSCRIBE vào kênh, và bất cứ khi nào có tin nhắn mới, Redis sẽ lập tức đẩy (push) về cho họ theo thời gian thực với độ trễ cực thấp.
+Publisher chỉ cần bắn tin nhắn vào "Channel". Subscriber cứ lắng nghe channel đó, có tin mới Redis sẽ lập tức đẩy (push) về theo thời gian thực.
 
-Tuy nhiên, đặc tính quan trọng nhất của Redis Pub/Sub là "Fire-and-Forget" (bắn và quên) và hoàn toàn không có tính bền vững (No Persistence). Tin nhắn sau khi được publish sẽ được phân phối ngay lập tức tới các subscriber đang online rồi biến mất khỏi bộ nhớ Redis, không hề lưu trữ lại ở bất kỳ đâu. 
-
-Nếu một subscriber đang offline tại thời điểm publish tin nhắn, họ sẽ bỏ lỡ thông báo đó mãi mãi. Vì vậy, Pub/Sub chỉ phù hợp cho các sự kiện tức thời, không yêu cầu tính bền vững cao, ví dụ như chat trực tuyến, hoặc cập nhật chỉ số live dashboard.
+Đặc tính quan trọng nhất là "Fire-and-Forget" (bắn và quên) và hoàn toàn không lưu trữ (No Persistence). Tin nhắn được gửi đến người đang online rồi biến mất ngay. Ai offline sẽ lỡ thông báo mãi mãi. Vì thế Pub/Sub hợp nhất cho chat live, thông báo tức thì, hoặc live dashboard.
 -->
 
 ---
@@ -88,9 +86,10 @@ Using Redis Pub/Sub to scale Socket.IO horizontally across multiple backend node
 <!--
 Để hình dung rõ hơn sức mạnh của Pub/Sub trong thực tế, chúng ta hãy xem xét bài toán: Mở rộng hệ thống WebSockets theo chiều ngang (horizontal scaling).
 
-Khi lượng người dùng ứng dụng chat tăng lên, một máy chủ WebSocket đơn lẻ không thể chịu tải nổi, buộc ta phải chạy song song nhiều máy chủ đứng sau một Load Balancer. Tuy nhiên, WebSocket lại là kết nối có trạng thái (stateful). Khi Sinh viên A kết nối tới Server 1 và Sinh viên B kết nối tới Server 2, làm sao để Sinh viên A gửi tin nhắn cho Sinh viên B? Server 1 không thể trực tiếp gửi tin tới socket đang duy trì bởi Server 2.
+Khi lượng người dùng ứng dụng chat tăng lên, một máy chủ WebSocket đơn lẻ không thể chịu tải nổi, buộc ta phải chạy song song nhiều máy chủ đứng sau một Load Balancer. Tuy nhiên, WebSocket lại là kết nối có trạng thái (stateful). Nếu một client trên Server A muốn gửi tin nhắn cho một client trên Server B, làm sao làm được việc đó khi Server A không hề giữ kết nối trực tiếp với client của Server B?
 
-Đây chính là lúc Redis Pub/Sub tỏa sáng như một "cầu nối" chia sẻ sự kiện (event bus). Khi Server 1 nhận tin nhắn từ Sinh viên A, nó sẽ PUBLISH tin nhắn lên một channel chung của Redis. Do tất cả các máy chủ WebSocket đều đang SUBSCRIBE kênh này, họ sẽ nhận được tin nhắn đó đồng thời và tức thì. Server 2 nhận được tin từ Redis, lập tức đẩy xuống cho Sinh viên B qua socket kết nối trực tiếp của mình.
+Đây chính là lúc Redis Pub/Sub tỏa sáng như một "cầu nối" chia sẻ sự kiện (shared event bus) cực kỳ gọn nhẹ giữa các máy chủ. 
+Cách hoạt động rất đơn giản: Khi Server A nhận tin nhắn từ client của mình, nó sẽ PUBLISH tin nhắn đó lên Redis. Redis sau đó sẽ fan-out (phát tán) tin nhắn này tới tất cả các máy chủ khác (như Server B và Server C) nhờ việc các máy chủ này đều SUBSCRIBE vào kênh chung của Redis. Khi Server B nhận được tin nhắn từ Redis, nó sẽ lập tức đẩy (push) xuống cho các client đang kết nối trực tiếp với nó theo thời gian thực.
 -->
 
 ---
@@ -120,11 +119,11 @@ PSUBSCRIBE course:*:announcements
 > **Key Constraint:** Once a connection runs `SUBSCRIBE`, it enters *subscriber mode* — it can only run subscription commands. Use a **separate connection** to `PUBLISH` or query the DB.
 
 <!--
-Hãy cùng nhìn vào các lệnh thực tế của Pub/Sub ở tầng terminal để hiểu cách hoạt động.
+Thực hành các lệnh Pub/Sub:
 
-Ở cửa sổ kết nối thứ nhất, client thực hiện SUBSCRIBE vào kênh `course:SE332.Q21:announcements`. Ngay khi lệnh này chạy, connection đó sẽ chuyển sang chế độ "lắng nghe" và bị chặn (blocked), không thể gõ các lệnh đọc ghi thông thường như GET/SET được nữa.
+1. Lệnh `SUBSCRIBE` để lắng nghe kênh. Lưu ý: Khi chạy lệnh này, kết nối chuyển sang chế độ lắng nghe (blocked), không thể gọi GET/SET được nữa.
+2. Lệnh `PUBLISH` để phát tin. Redis trả về số lượng người đang online nhận được tin. Những ai đang SUBSCRIBE lập tức nhận thông điệp.
+3. Lệnh `PSUBSCRIBE` với dấu `*` để nghe nhiều kênh cùng lúc (Rất tốt cho hệ thống giám sát).
 
-Ở cửa sổ thứ hai, publisher phát thông báo bằng lệnh `PUBLISH course:SE332.Q21:announcements "Assignment 3 deadline..."`. Redis sẽ trả về một số nguyên biểu thị số lượng subscriber đang online nhận được tin nhắn. Ngay lập tức, cửa sổ thứ nhất sẽ tự động nhận và in ra thông điệp gồm: loại tin nhắn, tên kênh, và nội dung tin nhắn.
-
-Ngoài ra, ta có thể dùng lệnh `PSUBSCRIBE` (Pattern Subscribe) với ký tự đại diện wildcard `*` để lắng nghe theo nhóm kênh, rất hữu ích cho các hệ thống giám sát. Lưu ý kỹ thuật quan trọng: khi connection đã chạy SUBSCRIBE, nó sẽ bị khóa vào chế độ nhận tin, bắt buộc ứng dụng phải mở một kết nối riêng biệt khác để thực hiện lệnh PUBLISH hoặc truy vấn dữ liệu.
+Lưu ý kỹ thuật quan trọng: Khi đã SUBSCRIBE, kết nối bị khóa. Bắt buộc phải mở một kết nối (connection) riêng biệt khác để gọi PUBLISH hoặc làm việc với DB.
 -->

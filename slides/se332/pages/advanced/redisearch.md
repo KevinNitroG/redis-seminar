@@ -33,11 +33,11 @@ Standard Redis is extremely fast for direct lookups by key — but what about qu
 </div>
 
 <!--
-Tiếp theo, chúng ta sẽ bước sang một mảnh ghép vô cùng mạnh mẽ song hành cùng RedisJSON: đó là RediSearch.
+Tiếp theo là RediSearch - giải pháp tìm kiếm dữ liệu mạnh mẽ.
 
-Như đã biết, Redis thông thường là một flat keyspace phẳng, tối ưu cho việc tìm kiếm O(1) khi biết chính xác key (như `student:23521476`). Nhưng trong thực tế, ta thường cần lọc sinh viên khóa 23, có GPA trên 9.0, hoặc tìm kiếm theo tên. Để giải quyết, nhiều nhà phát triển mắc sai lầm nghiêm trọng khi sử dụng `KEYS *` hoặc `SCAN` để duyệt toàn bộ bộ nhớ và lọc ở phía ứng dụng.
+Bình thường, Redis chỉ tối ưu tìm kiếm O(1) qua key chính xác (như `student:23521476`). Khi cần lọc theo GPA hay tìm tên, nhiều người mắc sai lầm dùng `KEYS *` để quét toàn bộ dữ liệu.
 
-Lệnh `KEYS *` là một thảm họa trên production với độ phức tạp O(N). Vì Redis đơn luồng, lệnh này sẽ chặn đứng (block) hoàn toàn luồng xử lý chính. Mọi request đọc ghi từ hàng ngàn user khác đều phải xếp hàng chờ đợi, dễ dẫn đến nghẽn hệ thống, treo ứng dụng và gây downtime nghiêm trọng.
+Đây là một thảm họa trên production. Lệnh `KEYS *` có độ phức tạp O(N). Do Redis đơn luồng, nó sẽ chặn đứng (block) toàn bộ server, khiến mọi request khác phải chờ, gây nghẽn và sập hệ thống.
 -->
 
 ---
@@ -57,14 +57,14 @@ Automatically index your structured JSON or Hash data fields in memory.
 Index updates automatically under-the-hood whenever underlying JSON data changes.
 
 <!--
-Để giải quyết bài toán truy vấn phức tạp mà vẫn giữ hiệu năng siêu tốc, RediSearch cung cấp công cụ tìm kiếm toàn văn và lập chỉ mục phụ (Secondary Index) thời gian thực trực tiếp trong RAM. Thay vì phải duy trì Sorted Set thủ công, RediSearch cho phép định nghĩa các chỉ mục trên tài liệu Hash hoặc JSON. Khi dữ liệu thay đổi, index tự động cập nhật dưới nền (asynchronously) mà không chặn luồng ghi chính.
+Để giải quyết điều này, RediSearch cung cấp Secondary Index và Full-Text Search ngay trên RAM. Khác với việc phải quản lý Sorted Set thủ công, index của RediSearch tự động cập nhật ngầm khi dữ liệu thay đổi.
 
-RediSearch hỗ trợ 3 loại trường index phổ biến:
-1. **TAG**: So khớp chính xác (exact match) trên các trường ngắn phân đoạn, như khóa tuyển sinh `cohort` hoặc `username`.
-2. **NUMERIC**: Phục vụ truy vấn lọc theo khoảng (range queries), như tìm sinh viên có GPA từ 8.5 đến 9.5 hoặc lọc dung lượng lớp học.
-3. **TEXT**: Động cơ Full-Text Search thực thụ hỗ trợ tìm kiếm mờ (fuzzy search), phân tích từ căn (stemming), và gán trọng số (weighting) khi tìm gần đúng.
+Có 3 loại index chính:
+1. TAG: Khớp chính xác (exact match) cho các giá trị như `cohort` hay `username`.
+2. NUMERIC: Truy vấn theo khoảng (range), ví dụ sinh viên có GPA [8.5 - 9.5].
+3. TEXT: Hỗ trợ tìm kiếm mờ (fuzzy search), phân tích từ căn (stemming), và gán trọng số ưu tiên.
 
-Nhờ đó, bạn có thể biến Redis thành cơ sở dữ liệu tài liệu linh hoạt như MongoDB hay Elasticsearch nhưng với tốc độ nhanh gấp hàng chục lần.
+RediSearch biến Redis thành database tài liệu linh hoạt như Elasticsearch nhưng với tốc độ của RAM.
 -->
 
 ---
@@ -94,15 +94,11 @@ FT.AGGREGATE idx:students "*" GROUPBY 1 @cohort REDUCE COUNT 0 AS student_count
 ```
 
 <!--
-Hãy cùng nghiên cứu các câu lệnh thực tế của RediSearch để thấy được sức mạnh và cú pháp truy vấn của nó.
+Hãy lướt qua một số câu lệnh RediSearch thực tế:
 
-Đầu tiên, ta dùng lệnh `FT.CREATE` tạo chỉ mục `idx:students` trên tài liệu `JSON` cho các key có tiền tố `student:`. Trong SCHEMA, ta định nghĩa trường `name` là TEXT kèm trọng số 2.0 (ưu tiên khớp tên), `cohort` là TAG, `gpa` là NUMERIC, và `username` là TEXT. RediSearch sẽ quét lập chỉ mục toàn bộ dữ liệu hiện tại và tự động cập nhật sau này.
-
-Thứ hai, để tìm sinh viên khóa 23, ta dùng `FT.SEARCH idx:students "@cohort:{23}"`. Ngoặc nhọn `{}` đại diện cho việc lọc chính xác trường TAG.
-
-Thứ ba, lọc khoảng điểm GPA từ 9.0 trở lên bằng cú pháp `FT.SEARCH idx:students "@gpa:[9.0 +inf]"`, với ngoặc vuông `[]` cho NUMERIC range và `+inf` là dương vô cực. Ta dễ dàng kết hợp các điều kiện như: `@cohort:{23} @gpa:[8.5 9.5]`.
-
-Thứ tư, tìm kiếm văn bản đầy đủ với `"Đặng Phú"` để tìm kiếm mờ trên các trường TEXT và trả về kết quả xếp hạng theo độ tương đồng.
-
-Cuối cùng, lệnh `FT.AGGREGATE` hỗ trợ gom cụm thống kê siêu tốc ngay trong RAM. Ở đây ta nhóm theo khóa (`GROUPBY 1 @cohort`) và đếm số lượng sinh viên (`REDUCE COUNT`), giúp loại bỏ hoàn toàn việc kéo lượng lớn bản ghi về ứng dụng để tính toán.
+1. Dùng `FT.CREATE` để tạo index `idx:students` trên các key `student:`. Định nghĩa rõ kiểu dữ liệu trong SCHEMA (TEXT, TAG, NUMERIC).
+2. Lọc chính xác trường TAG (khóa 23): Dùng cú pháp `@cohort:{23}` (ngoặc nhọn).
+3. Lọc khoảng NUMERIC (GPA >= 9.0): Dùng `@gpa:[9.0 +inf]` (ngoặc vuông). Dễ dàng kết hợp nhiều điều kiện cùng lúc.
+4. Tìm kiếm Full-Text: Nhập `"Đặng Phú"` để tìm kiếm mờ, kết quả được xếp hạng theo độ tương đồng.
+5. Gom cụm (`FT.AGGREGATE`): Nhóm theo khóa (`GROUPBY @cohort`) và đếm (`REDUCE COUNT`) trực tiếp trên RAM, không cần kéo dữ liệu về ứng dụng tính toán.
 -->

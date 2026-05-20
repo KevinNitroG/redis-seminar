@@ -45,11 +45,11 @@ JSON.SET student:23521476 $.gpa 9.3
 </div>
 
 <!--
-Chúng ta cùng bước sang một Module cực kỳ đột phá của Redis: RedisJSON. Trước đây, để lưu trữ JSON phức tạp, lập trình viên thường tuần tự hóa (serialize) thành chuỗi rồi lưu vào kiểu dữ liệu String thông thường.
+Tiếp theo là RedisJSON. Trước đây, lưu JSON vào Redis bằng String là một Anti-Pattern tai hại.
 
-Tuy nhiên, đây là một Anti-Pattern tai hại khi tài liệu lớn hoặc cần cập nhật thường xuyên. Ví dụ, để cập nhật điểm GPA từ 9.2 lên 9.3 của sinh viên Phú Thiện, ứng dụng phải: GET toàn bộ chuỗi JSON về, giải tuần tự hóa (deserialize) trong RAM ứng dụng, sửa đổi giá trị, sau đó serialize ngược lại và SET đè lên Redis. Quy trình cồng kềnh này gây hao tổn băng thông, tốn CPU và cực kỳ dễ xảy ra race conditions khi có nhiều client cùng cập nhật đồng thời.
+Ví dụ, để sửa GPA từ 9.2 lên 9.3, bạn phải GET toàn bộ chuỗi về, giải mã (deserialize), sửa, rồi đóng gói (serialize) lại và SET đè lên Redis. Cực kỳ tốn băng thông, CPU và dễ lỗi luồng (race conditions).
 
-Để giải quyết triệt để, RedisJSON cho phép thao tác trực tiếp trên bộ nhớ. Với lệnh `JSON.SET student:23521476 $.gpa 9.3`, ta chỉ định chính xác trường cần cập nhật qua đường dẫn JSONPath. Redis sẽ trực tiếp cập nhật giá trị đó trên cấu trúc cây nhị phân trong RAM mà không cần tải tài liệu qua mạng, loại bỏ hoàn toàn serialize/deserialize và đảm bảo an toàn luồng tuyệt đối nhờ cơ chế đơn luồng.
+RedisJSON giải quyết triệt để: Dùng lệnh `JSON.SET ... $.gpa 9.3`, bạn cập nhật trực tiếp chính xác trường đó trên RAM. Bỏ qua hoàn toàn serialize/deserialize, tiết kiệm mạng và cực kỳ an toàn.
 -->
 
 ---
@@ -91,11 +91,11 @@ graph TD
 </div>
 
 <!--
-Để hiểu tại sao RedisJSON lại giải quyết triệt để bài toán hiệu năng, chúng ta hãy xem xét mô hình tài liệu nguyên bản (Native Document Model). Khi lưu trữ, Redis không lưu dưới dạng chuỗi phẳng mà tự động phân tích (parse) tài liệu thành một cây phân cấp nhị phân (binary hierarchical tree) ngay trong RAM.
+Bí quyết hiệu năng của RedisJSON là Native Document Model. Redis không lưu JSON thành chuỗi, mà phân tách thành cây phân cấp trực tiếp trên RAM.
 
-Nhờ cấu trúc cây này, chúng ta có thể sử dụng cú pháp JSONPath tiêu chuẩn (như `$`, `$.gpa`, `$.enrollments[0]`) để trỏ thẳng đến bất kỳ nút nào và thực hiện đọc/ghi trực tiếp mà không cần deserialize toàn bộ tài liệu.
+Nhờ vậy, ta dùng cú pháp JSONPath (`$`, `$.gpa`, `$.enrollments[0]`) để trỏ và đọc/ghi trực tiếp vào một nút con (như sơ đồ bên phải) mà không cần load nguyên khối tài liệu lớn.
 
-Hãy nhìn sơ đồ biểu diễn cây nhị phân ở bên phải. Nút gốc kí hiệu là `$`. Các thuộc tính phẳng như `id`, `name`, `cohort`, `gpa` nằm ở các nút con trực tiếp. Mảng `enrollments` chứa các chỉ mục môn học như `SE332.Q21` và `SE121.Q21`. Cấu trúc này giúp truy cập và sửa đổi phần tử con đạt tốc độ siêu tốc O(1) hoặc O(log N), mang lại hiệu năng vượt trội.
+Tốc độ truy cập và cập nhật sâu bên trong cấu trúc cây siêu nhanh, đạt tới mức O(1) hoặc O(log N).
 -->
 
 ---
@@ -127,11 +127,12 @@ JSON.NUMINCRBY student:23521476 $.gpa 0.1
 > **Thread-Safe & Atomic:** Because Redis is single-threaded, `JSON.ARRAPPEND` and `JSON.NUMINCRBY` are completely atomic — no need for `WATCH`/`MULTI`/`EXEC`.
 
 <!--
-Hãy cùng nhìn vào các câu lệnh thực tế của RedisJSON để thấy sự tiện lợi và sức mạnh của nó.
+Các lệnh thao tác thực tế:
 
-Đầu tiên, để lưu hồ sơ sinh viên vào nút gốc `$`, ta dùng lệnh `JSON.SET student:23521476 $` kèm chuỗi JSON để Redis phân tích thành cây nhị phân trong RAM. Khi truy vấn, thay vì lấy toàn bộ object, ta có thể lọc chính xác các trường cần thiết qua `JSON.GET student:23521476 $.name $.gpa` nhằm tiết kiệm tối đa băng thông.
+1. Ghi toàn bộ dữ liệu vào nút gốc (`$`) bằng `JSON.SET`.
+2. Truy vấn trích xuất đúng trường cần thiết bằng `JSON.GET ... $.name $.gpa` -> tiết kiệm băng thông.
+3. Thay đổi giá trị mảng, ví dụ thêm môn học mới bằng `JSON.ARRAPPEND`.
+4. Cộng/trừ toán học trên RAM với `JSON.NUMINCRBY`.
 
-Để cập nhật điểm số trực tiếp, ta dùng `JSON.SET student:23521476 $.gpa 9.3`. Khi sinh viên đăng ký thêm môn học, lệnh `JSON.ARRAPPEND student:23521476 $.enrollments '"SE113.Q11"'` sẽ tự động tìm tới nút mảng và thêm phần tử mới vào cuối. Chúng ta cũng có lệnh `JSON.NUMINCRBY` để tăng/giảm giá trị số một cách nguyên tử.
-
-Tất cả các thao tác trên đều đảm bảo an toàn luồng (Thread-Safe) và nguyên tử (Atomic). Do cơ chế đơn luồng của Redis, các thao tác được thực thi tuần tự và cô lập hoàn toàn, loại bỏ nhu cầu sử dụng các cơ chế khóa phức tạp như WATCH hay MULTI/EXEC.
+Đặc biệt: Nhờ kiến trúc đơn luồng của Redis, các thao tác này hoàn toàn nguyên tử (Atomic) và an toàn, không cần dùng các kỹ thuật khóa luồng (như WATCH hay MULTI).
 -->

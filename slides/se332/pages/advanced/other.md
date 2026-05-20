@@ -13,13 +13,13 @@ Trade a tiny, controlled margin of error (under 1%) for massive memory savings (
 | **Top-K / CMS** | Frequency & popularity | Track most-searched courses in real time | O(1) space, dynamic ranking |
 
 <!--
-Ngoài các cấu trúc dữ liệu quen thuộc, Redis còn sở hữu những "vũ khí bí mật" cực kỳ mạnh mẽ dành cho bài toán dữ liệu quy mô lớn (Big Data). Đó chính là các cấu trúc dữ liệu xác suất (Probabilistic Data Structures).
+Tiếp theo là các cấu trúc dữ liệu xác suất (Probabilistic Data Structures) dành cho Big Data.
 
-Điểm chung của các cấu trúc này là sự đánh đổi: chấp nhận một tỷ lệ sai số vô cùng nhỏ (thường dưới 1%) để đổi lấy hiệu năng xử lý siêu việt và mức tiêu thụ RAM tối thiểu ở mức O(1) — nghĩa là dung lượng RAM cố định, không hề tăng lên dù lượng dữ liệu đầu vào có lên tới hàng trăm triệu bản ghi.
+Điểm cốt lõi: Chấp nhận sai số siêu nhỏ (<1%) để đổi lấy mức tiêu thụ RAM cố định (O(1)), giải quyết hàng trăm triệu bản ghi mà không phình bộ nhớ.
 
-1. **HyperLogLog**: Giúp đếm các phần tử không trùng lặp (Cardinality Estimation). Ví dụ, để đếm lượng sinh viên truy cập cổng UIT hàng ngày, nếu dùng Set truyền thống cho 10 triệu người dùng sẽ tiêu tốn hàng trăm MB RAM. Nhưng với HyperLogLog, ta chỉ tốn đúng 12 KB bộ nhớ cố định với tỷ lệ sai số cực nhỏ 0.81%.
-2. **Bloom Filter**: Phục vụ kiểm tra sự tồn tại của phần tử (Membership Testing). Trước khi thực hiện truy vấn đắt đỏ xuống DB (như PostgreSQL), ta check qua Bloom Filter. Nếu nó báo "Không tồn tại", chắc chắn 100% phần tử không có và ta từ chối request ngay để bảo vệ DB. Nếu báo "Có", ta mới tiếp tục query xuống DB.
-3. **Top-K và Count-Min Sketch (CMS)**: Hỗ trợ theo dõi tần suất xuất hiện và xếp hạng độ phổ biến của phần tử theo thời gian thực (ví dụ môn học được tìm nhiều nhất tại UIT) trong một không gian RAM cố định.
+1. HyperLogLog: Đếm số lượng phần tử duy nhất. Thay vì tốn hàng trăm MB dùng Set để đếm 10 triệu sinh viên, HyperLogLog chỉ tốn đúng 12 KB (sai số 0.81%).
+2. Bloom Filter: Màng lọc kiểm tra sự tồn tại trước khi gọi DB. Nếu báo "Không tồn tại" -> chắc chắn 100% không có, chặn request sớm. Báo "Có" mới query DB.
+3. Top-K / CMS: Đếm tần suất và xếp hạng thời gian thực (như môn học hot nhất UIT) bằng dung lượng RAM rất nhỏ.
 -->
 
 ---
@@ -59,13 +59,11 @@ Combine vector similarity and metadata filtering:
 </div>
 
 <!--
-Xu hướng công nghệ AI và mô hình ngôn ngữ lớn (LLM) đang rất bùng nổ, và Redis Stack hiện tại đã trở thành một cơ sở dữ liệu Vector (Vector Database) thực thụ chạy trực tiếp trong RAM với thuật toán ANN (HNSW/FLAT) tối ưu cao.
+Redis Stack hiện đã là một Vector Database thực thụ chạy trên RAM.
 
-Tìm kiếm Vector (VSS) cho phép ta tìm kiếm thông tin dựa trên ý nghĩa ngữ nghĩa (semantic similarity) thay vì chỉ so khớp từ khóa chính xác. Các đoạn văn bản sẽ được chuyển đổi thành các chuỗi số thực nhiều chiều (embeddings vector) trong Redis.
+Tìm kiếm Vector (VSS) cho phép tìm thông tin theo ngữ nghĩa (semantic) thay vì chỉ khớp từ khóa. Ví dụ: Chatbot UIT nhận câu hỏi "tìm môn về mobile", AI dịch thành vector, Redis trả về môn "Lập trình di động" tức thì dù không khớp nguyên văn.
 
-Hãy hình dung kịch bản UIT Chatbot tư vấn học tập: Sinh viên hỏi "tìm môn về lập trình di động", AI sẽ dịch câu hỏi thành vector. Redis sẽ tính khoảng cách vector và trả về ngay môn "Lập trình ứng dụng trên thiết bị di động" hay "Thiết kế giao diện di động" tức thì, dù câu hỏi không chứa từ khóa khớp chính xác.
-
-Đặc biệt, Redis vượt trội nhờ khả năng truy vấn kết hợp (Hybrid Query). Bạn có thể vừa tìm kiếm ngữ nghĩa tương tự môn "Web Development", vừa lọc thêm các điều kiện có cấu trúc (ví dụ: giảng dạy bằng tiếng Anh, lớp còn chỗ, và có số tín chỉ bằng 3). Tất cả được Redis thực thi đồng thời và nguyên tử chỉ trong một câu query duy nhất, mang lại hiệu năng tối ưu tuyệt đối.
+Điểm mạnh lớn nhất là Hybrid Query (truy vấn kết hợp): Bạn có thể vừa tìm kiếm ngữ nghĩa, vừa dùng filter truyền thống (như tín chỉ = 3, ngôn ngữ = Tiếng Anh, lớp còn chỗ). Tất cả thực thi đồng thời trong 1 câu truy vấn với hiệu năng cực cao.
 -->
 
 ---
@@ -78,9 +76,9 @@ figureCaption: 'Redis vector search performance benchmark: Throughput vs. Latenc
 ## Benchmark: Vector Search Performance
 
 <!--
-Để minh chứng cho hiệu năng vượt trội, hãy cùng nhìn vào biểu đồ benchmark tìm kiếm vector của Redis ở trên slide.
+Biểu đồ benchmark này minh chứng hiệu năng của Redis Vector Search. 
 
-Biểu đồ so sánh throughput (số lượng câu truy vấn/giây) và latency (độ trễ phản hồi/mili-giây) của Redis với các giải pháp khác. Dù cơ sở dữ liệu chứa hàng triệu vector và chịu tải truy cập cực kỳ nặng nề, Redis vẫn duy trì throughput vượt trội với độ trễ phản hồi luôn ở mức dưới 1 mili-giây.
+Dù chứa hàng triệu vector và chịu tải cao, Redis vẫn duy trì throughput (số truy vấn/giây) vượt trội, trong khi độ trễ (latency) luôn nằm dưới 1 mili-giây.
 
-Độ trễ cực thấp này biến Redis thành sự lựa chọn hàng đầu cho các ứng dụng chatbot AI thời gian thực, hệ thống gợi ý sản phẩm và các ứng dụng RAG. Qua đó, Redis đã thực sự tiến hóa từ một giải pháp cache đơn giản thành một cơ sở dữ liệu đa mô hình (multi-model database) hiện đại.
+Tốc độ này biến Redis thành lựa chọn hàng đầu cho Chatbot AI thời gian thực và ứng dụng RAG, khẳng định vị thế cơ sở dữ liệu đa mô hình thay vì chỉ là một cache đơn thuần.
 -->

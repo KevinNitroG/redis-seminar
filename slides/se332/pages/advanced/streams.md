@@ -31,12 +31,13 @@ graph TD
 </div>
 
 <!--
-Chúng ta vừa đi qua Pub/Sub với nhược điểm chí mạng là "Fire-and-Forget". Để giải quyết triệt để vấn đề mất tin nhắn và xử lý luồng dữ liệu quy mô lớn, Redis đã giới thiệu cấu trúc dữ liệu Streams từ phiên bản 5.0. Đây là một nhật ký sự kiện dạng append-only (chỉ ghi thêm vào cuối) bền vững và lưu trữ trực tiếp trong RAM.
+Để giải quyết nhược điểm mất tin nhắn của Pub/Sub, Redis 5.0 giới thiệu Streams - một nhật ký sự kiện dạng append-only (chỉ ghi nối tiếp).
 
-Đặc tính đầu tiên là tính Bền vững (Persistence) — dữ liệu lưu trữ trực tiếp trong RAM và được cấu hình ghi xuống đĩa qua RDB/AOF, giúp thông tin không bị mất mát khi máy chủ gặp sự cố hoặc restart.
-Đặc tính thứ hai là tính Thứ tự nghiêm ngặt (Strict Ordering) với ID độc bản dạng `timestamp-sequence` được sinh tự động và tăng dần theo thời gian, đảm bảo thứ tự trước sau của các sự kiện luôn chính xác tuyệt đối.
+Hai đặc tính cốt lõi:
+1. Bền vững (Persistence): Dữ liệu lưu trong RAM nhưng được ghi xuống đĩa (RDB/AOF) nên không lo mất khi crash.
+2. Thứ tự nghiêm ngặt (Strict Ordering): Mỗi event có ID dạng `timestamp-sequence`, đảm bảo thứ tự thời gian tuyệt đối.
 
-Hãy nhìn vào sơ đồ bên phải minh họa kịch bản đăng ký môn học tại UIT. Mỗi lượt click đăng ký của sinh viên được ghi nhận (XADD) vào Stream như một Event độc lập theo thời gian (ai click trước sẽ xếp trước), giúp hệ thống xử lý cực kỳ công bằng và loại bỏ hoàn toàn tranh chấp.
+Ví dụ đăng ký môn học: Mỗi lượt click là một Event độc lập đưa vào Stream (ai click trước xếp trước), giúp xử lý cực kỳ công bằng và không xảy ra tranh chấp.
 -->
 
 ---
@@ -57,15 +58,19 @@ A quick architectural decision matrix.
 | **Primary Use Cases** | Real-time chat, alerts | **Task queues, Event Sourcing, Audit logs** |
 
 <!--
-Để dễ dàng đưa ra quyết định kiến trúc khi thiết kế hệ thống, hãy cùng so sánh nhanh Pub/Sub và Streams qua bảng đối chiếu này. Đây là phần kiến thức vô cùng quan trọng khi phỏng vấn hoặc thiết kế hệ thống thực tế.
+Để dễ dàng đưa ra quyết định kiến trúc khi thiết kế hệ thống, hãy cùng so sánh nhanh Pub/Sub và Streams qua bảng đối chiếu gồm 6 đặc tính kỹ thuật cốt lõi này. Đây là phần kiến thức vô cùng quan trọng khi phỏng vấn hoặc thiết kế hệ thống thực tế.
 
-Thứ nhất, về mặt Persistence: Pub/Sub hoàn toàn không lưu trữ (bắn xong là mất), trong khi Streams lưu trữ bền vững trên cả RAM lẫn đĩa cứng.
+Thứ nhất, về Bền vững (Persistence): Pub/Sub hoàn toàn không lưu trữ (bắn xong là mất), trong khi Streams lưu trữ bền vững trên cả RAM lẫn đĩa cứng.
 
-Thứ hai, về mô hình phân phối dữ liệu (Delivery Model): Pub/Sub sử dụng cơ chế Push — Redis chủ động đẩy tin nhắn cho client đang online. Còn Streams sử dụng cơ chế Pull — dữ liệu nằm im trong Stream, client chủ động kéo (fetch) dữ liệu về khi họ sẵn sàng, giúp tránh nghẽn (overwhelmed) khi lượng tin nhắn tăng đột biến.
+Thứ hai, về Mô hình phân phối (Delivery Model): Pub/Sub sử dụng cơ chế Push — Redis chủ động đẩy tin nhắn cho client đang online. Ngược lại, Streams sử dụng cơ chế Pull — dữ liệu nằm im trong Stream, client chủ động kéo (fetch) về khi họ sẵn sàng, tránh bị quá tải.
 
-Thứ ba, khả năng Replay (đọc lại lịch sử): Pub/Sub không thể làm được, còn Streams hỗ trợ tuyệt vời việc đọc lại một khoảng thời gian bất kỳ trong quá khứ nhờ cơ chế đánh chỉ mục theo ID thời gian.
+Thứ ba, về Lưu giữ dữ liệu (Data Retention): Tin nhắn Pub/Sub bị xóa ngay lập tức sau khi gửi, còn trong Streams, dữ liệu được giữ lại vô thời hạn cho đến khi ta chủ động xóa.
 
-Cuối cùng, về chia sẻ công việc (Work Sharing): Pub/Sub sẽ nhân bản và gửi tin nhắn giống hệt nhau cho toàn bộ subscriber. Còn Streams hỗ trợ cơ chế Consumer Groups — cho phép phân phối các sự kiện khác nhau cho các worker khác nhau xử lý song song, tránh việc một tác vụ bị xử lý trùng lặp.
+Thứ tư, về Đọc lại lịch sử (History Replay): Pub/Sub không có tính năng này, còn Streams hỗ trợ tuyệt vời việc đọc lại sự kiện trong quá khứ nhờ cơ chế range query theo ID thời gian.
+
+Thứ năm, về Chia sẻ công việc (Work Sharing): Pub/Sub nhân bản tin nhắn giống hệt nhau cho toàn bộ subscriber (mọi người cùng nhận một tin). Còn Streams hỗ trợ Consumer Groups chia việc cho các worker xử lý song song theo mô hình "divide & conquer".
+
+Cuối cùng, về Ca sử dụng chính (Primary Use Cases): Pub/Sub hoàn hảo cho chat thời gian thực hoặc thông báo đẩy (alerts). Trong khi đó, Streams là lựa chọn tối ưu cho hàng đợi tác vụ (task queues), lưu vết sự kiện (Event Sourcing) và nhật ký kiểm toán (Audit logs).
 -->
 
 ---
@@ -105,10 +110,13 @@ graph TD
 <!--
 Hãy cùng đi sâu vào tính năng mạnh mẽ nhất giúp Streams cạnh tranh sòng phẳng với các hệ thống Message Queue chuyên nghiệp như Kafka hay RabbitMQ: đó là Consumer Groups (Nhóm tiêu thụ).
 
-Consumer Groups cho phép chúng ta gộp chung các Worker xử lý song song để giải quyết bài toán tải cao (ví dụ hàng ngàn sinh viên click đăng ký môn học cùng lúc). 
-Hệ thống này mang lại hai lợi ích lớn:
-1. Parallel Processing: Chia việc cho các worker khác nhau xử lý song song và đảm bảo không có tin nhắn nào bị xử lý trùng lặp.
-2. Fault Tolerance: Sử dụng danh sách Pending Entries List (PEL) để giám sát các tin nhắn đang được xử lý. Chỉ khi worker gửi xác nhận (XACK), tin nhắn mới được xóa khỏi PEL. Nếu một worker bị crash đột ngột trước khi kịp xử lý, worker khác có thể giành lấy ("claim") để xử lý tiếp, mang lại độ tin cậy tuyệt đối cho luồng đăng ký học của UIT.
+Consumer Groups giúp giải quyết bài toán tải cao bằng cách gộp chung các worker để xử lý song song với 3 cơ chế cực kỳ quan trọng:
+
+Thứ nhất, Parallel Processing (Xử lý song song): Redis sẽ tự động phân phối các tin nhắn khác nhau cho các worker đã đăng ký trong nhóm (như worker1 và worker2 ở sơ đồ). Điều này giúp tăng tốc độ xử lý và đảm bảo không có tin nhắn nào bị xử lý trùng lặp bởi hai worker khác nhau.
+
+Thứ hai, Guaranteed Delivery (Đảm bảo phân phối): Khi một tin nhắn được phân phối cho worker, nó sẽ không biến mất ngay mà được đưa vào một danh sách đặc biệt gọi là Pending Entries List (PEL). Chỉ khi worker xử lý xong và gửi lệnh xác nhận XACK, tin nhắn mới được chính thức xóa bỏ.
+
+Thứ ba, Fault Tolerance (Khả năng chịu lỗi): Dựa trên PEL, nếu worker1 nhận việc nhưng bị crash đột ngột giữa chừng, worker2 hoàn toàn có thể giành quyền sở hữu (claim) và xử lý lại các tác vụ đang bị treo đó. Điều này đem lại độ tin cậy tuyệt đối cho luồng đăng ký học của UIT.
 -->
 
 ---
@@ -137,15 +145,11 @@ XACK enrollments group_processors 1740825000000-0
 ```
 
 <!--
-Bây giờ, chúng ta hãy cùng thực hành các câu lệnh cơ bản của Streams trên terminal để xem luồng dữ liệu chạy như thế nào.
+Các lệnh cơ bản của Streams:
 
-Đầu tiên, để đẩy một sự kiện mới vào stream `enrollments`, chúng ta sử dụng lệnh `XADD`. Dấu sao `*` báo hiệu cho Redis tự động sinh ID dựa trên timestamp hiện tại của hệ thống. Phía sau là các cặp key-value lưu trữ thông tin sự kiện.
-
-Thứ hai, để truy vấn hoặc xem lại lịch sử các sự kiện trong một khoảng thời gian, chúng ta dùng lệnh `XRANGE`. Ở đây, dấu `-` đại diện cho ID nhỏ nhất có thể, dấu `+` đại diện cho ID lớn nhất có thể. Tham số `COUNT 5` giúp giới hạn lấy ra tối đa 5 sự kiện đầu tiên.
-
-Thứ ba, để cấu hình phân chia công việc xử lý song song, chúng ta khởi tạo một Consumer Group bằng lệnh `XGROUP CREATE` với nhóm `group_processors` quản lý stream. Ký hiệu `$` chỉ định rằng nhóm này sẽ chỉ tiêu thụ các tin nhắn mới phát sinh từ thời điểm này trở đi.
-
-Thứ tư, các Worker sẽ sử dụng lệnh `XREADGROUP` để kéo dữ liệu về xử lý. Ký hiệu `>` ở cuối có nghĩa là: "Hãy cho tôi sự kiện mới nhất chưa từng được phân phối cho bất kỳ ai trong nhóm này".
-
-Cuối cùng, sau khi Worker xử lý thành công, nó bắt buộc phải chạy lệnh `XACK` kèm theo ID của sự kiện để giải phóng nó ra khỏi danh sách PEL, tránh tình trạng tin nhắn bị treo trong trạng thái chờ.
+1. Đẩy sự kiện mới (`XADD`): Dấu `*` để Redis tự sinh ID theo timestamp.
+2. Truy vấn lịch sử (`XRANGE`): Dấu `-` và `+` đại diện cho ID nhỏ nhất và lớn nhất.
+3. Tạo Consumer Group (`XGROUP CREATE`): Ký hiệu `$` báo hiệu nhóm chỉ xử lý các tin nhắn mới từ thời điểm này trở đi.
+4. Worker kéo dữ liệu (`XREADGROUP`): Ký hiệu `>` nghĩa là lấy sự kiện mới nhất chưa từng giao cho ai.
+5. Xác nhận xử lý (`XACK`): Bắt buộc gọi sau khi xử lý xong để giải phóng tin nhắn khỏi danh sách treo (PEL).
 -->
