@@ -1,4 +1,5 @@
 ---
+hideInToc: true
 layout: figure
 figureUrl: https://images.viblo.asia/a7d0e5a9-ae0e-4d9d-ada5-6d5307e14c09.png
 figureCaption: 'Single Redis instance - Viblo'
@@ -22,6 +23,7 @@ Nếu không bật persistence, toàn bộ dữ liệu sẽ mất khi restart.
 -->
 
 ---
+hideInToc: true
 layout: figure
 figureUrl: https://images.viblo.asia/3a4f4cbc-3b13-4738-9248-ca605b115629.png
 figureCaption: 'High Availability - Viblo'
@@ -49,6 +51,7 @@ Mỗi instance Redis có replicationID và offset để track tiến trình đ�
 -->
 
 ---
+hideInToc: true
 layout: figure
 figureUrl: https://images.viblo.asia/ea6bf023-56af-48bf-bfbe-023952d5bb92.png
 figureCaption: 'Sentinel - Viblo'
@@ -84,6 +87,7 @@ QUAN TRỌNG: đừng nhầm giữa số Sentinel và số replica.
 -->
 
 ---
+hideInToc: true
 layout: figure
 figureUrl: https://images.viblo.asia/658120d2-bb70-4062-b72a-fe0eec407db0.png
 figureCaption: 'Cluster - Viblo'
