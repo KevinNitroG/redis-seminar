@@ -35,6 +35,10 @@ maxLevel: 1
 # Table of Contents
 
 ---
+src: ./pages/intro/slides.md
+---
+
+---
 src: ./pages/syntax-basic/slides.md
 ---
 
