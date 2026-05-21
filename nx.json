@@ -2,14 +2,13 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {
     "slidev": [
-      "{projectRoot}/slides.md",
-      "{projectRoot}/components/**/*",
-      "{projectRoot}/pages/**/*",
-      "{projectRoot}/layouts/**/*",
-      "{projectRoot}/public/**/*",
-      "{projectRoot}/setup/**/*",
-      "{projectRoot}/snippets/**/*",
-      "{projectRoot}/styles/**/*",
+      "{projectRoot}/components",
+      "{projectRoot}/pages",
+      "{projectRoot}/layouts",
+      "{projectRoot}/public",
+      "{projectRoot}/setup",
+      "{projectRoot}/snippets",
+      "{projectRoot}/styles",
       "{projectRoot}/vite.config.ts"
     ]
   },
