@@ -48,7 +48,7 @@ Bên trái — Redis phù hợp cho:
 Bên phải — Redis KHÔNG phù hợp cho:
 - File nhị phân lớn — Redis là in-memory, lưu file rất tốn RAM
 - Truy vấn quan hệ phức tạp — không có JOIN, không có query planner
-- Giao dịch multi-key ACID nghiêm ngặt — optimize for speed, không cho consistency mạnh
+- Transaction, multi-key ACID nghiêm ngặt — vì Redis tối ưu tốc độ, đánh đổi consistency mạnh
 - Lưu trữ dài hạn — persistence chỉ là backup, không thay thế được database
 
 Tóm lại: Redis mạnh ở tốc độ và đơn giản. Khi cần dữ liệu quan hệ phức tạp hoặc durability nghiêm ngặt, dùng RDBMS truyền thống
