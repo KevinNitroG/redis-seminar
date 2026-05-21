@@ -43,6 +43,20 @@ src: ./pages/syntax-basic/slides.md
 ---
 
 ---
+hideInToc: true
+---
+
+## Assignment
+
+| Member                 | Task                                | Percentage |
+| ---------------------- | ----------------------------------- | ---------- |
+| Trần Nguyễn Thái Bình  | Deploy & Ecosystem & Cloud Native   | 20%        |
+| Phan Lê Minh           | Advanced Patterns & Data Structures | 20%        |
+| Lê Phú Tân             | Core Data Types & Commands          | 20%        |
+| Lê Phú Thiện           | Demo                                | 20%        |
+| Nguyễn Thái Gia Nguyễn | Introduction                        | 20%        |
+
+---
 src: ./pages/advanced/slides.md
 ---
 
